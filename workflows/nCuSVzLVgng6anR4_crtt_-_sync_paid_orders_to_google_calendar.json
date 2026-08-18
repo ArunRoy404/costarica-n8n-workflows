@@ -1,0 +1,621 @@
+{
+  "updatedAt": "2026-08-06T09:29:23.530Z",
+  "createdAt": "2026-08-06T06:15:06.576Z",
+  "id": "nCuSVzLVgng6anR4",
+  "name": "CRTT - Sync Paid Orders to Google Calendar",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1344,
+        -304
+      ],
+      "id": "8ad9ce15-d3b3-4494-ab28-281e9d5f760e",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://dev.costaricatransfersandtours.com/wp-json/wc/v3/orders",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "wooCommerceApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "per_page",
+              "value": "100"
+            },
+            {
+              "name": "orderby",
+              "value": "date"
+            },
+            {
+              "name": "order",
+              "value": "desc"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1120,
+        -304
+      ],
+      "id": "20dbfe4b-4ec2-407e-a09e-a6970d52d564",
+      "name": "Get Recent Orders",
+      "credentials": {
+        "wooCommerceApi": {
+          "id": "VG4pKpGtyLYBwOzq",
+          "name": "CRTT WooCommerce"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const orders = $input.all().map(item => item.json);\nconst PAID_STATUSES = ['processing', 'completed'];\n\nfunction extractMeta(metaArr, key) {\n  const found = (metaArr || []).find(m => m.key === key);\n  return found ? found.value : '';\n}\n\nfunction decodeEntities(str) {\n  if (!str) return str;\n  return str.replace(/&#038;/g, '&').replace(/&amp;/g, '&');\n}\n\nfunction parsePickupDateTime(isoDate, timeStr) {\n  if (!isoDate) return null;\n  const timeMatch = (timeStr || '').match(/(\\d{1,2}):(\\d{2})\\s*(AM|PM)/i);\n  let hour = 9, minute = 0;\n  if (timeMatch) {\n    hour = parseInt(timeMatch[1], 10);\n    minute = parseInt(timeMatch[2], 10);\n    const ampm = timeMatch[3].toUpperCase();\n    if (ampm === 'PM' && hour !== 12) hour += 12;\n    if (ampm === 'AM' && hour === 12) hour = 0;\n  }\n  const pad = n => String(n).padStart(2, '0');\n  return `${isoDate}T${pad(hour)}:${pad(minute)}:00`;\n}\n\nconst results = [];\n\nfor (const order of orders) {\n  if (!PAID_STATUSES.includes(order.status)) continue;\n\n  const customerName = `${order.billing?.first_name || ''} ${order.billing?.last_name || ''}`.trim();\n  const customerEmail = order.billing?.email || '';\n  const customerPhone = order.billing?.phone || '';\n\n  const balanceFee = (order.fee_lines || []).find(f => (f.name || '').toLowerCase().includes('balance'));\n  const balanceDue = balanceFee ? Math.abs(parseFloat(balanceFee.total || '0')) : 0;\n  const paidNow = parseFloat(order.total || '0');\n  const overallPrice = (paidNow + balanceDue).toFixed(2);\n  const currencySymbol = order.currency_symbol || '$';\n  const multiTour = (order.line_items || []).length > 1;\n\n  for (const li of (order.line_items || [])) {\n    const meta = li.meta_data || [];\n    const tourName = decodeEntities(extractMeta(meta, 'Tour')) || decodeEntities(extractMeta(meta, 'Vehicle')) || li.name;\n    const tourType = decodeEntities(extractMeta(meta, 'product_name_n'));\n    const isoDate = extractMeta(meta, 'Date');\n    const pickupTime = extractMeta(meta, 'Pickup Time');\n    const from = decodeEntities(extractMeta(meta, 'From'));\n    const to = decodeEntities(extractMeta(meta, 'To'));\n    const passengers = extractMeta(meta, 'Passengers');\n    const vehicle = extractMeta(meta, 'Vehicle');\n    const durationMeta = extractMeta(meta, 'Duration') || extractMeta(meta, 'duration_name_n');\n\n    const startDateTime = parsePickupDateTime(isoDate, pickupTime);\n    if (!startDateTime) continue;\n\n    let durationHours = 2;\n    const durMatch = (durationMeta || '').match(/(\\d+)\\s*hours?/i);\n    if (durMatch) durationHours = parseInt(durMatch[1], 10);\n\n    const start = new Date(startDateTime);\n    const end = new Date(start.getTime() + durationHours * 60 * 60 * 1000);\n    const pad = n => String(n).padStart(2, '0');\n    const endDateTime = `${end.getFullYear()}-${pad(end.getMonth()+1)}-${pad(end.getDate())}T${pad(end.getHours())}:${pad(end.getMinutes())}:00`;\n\n    const eventId = `crtt${order.id}o${li.id}`;\n\n    const descLines = [\n      `Order #${order.number} (ID ${order.id})`,\n      tourType ? `Type: ${tourType}` : null,\n      `Customer: ${customerName}`,\n      customerEmail ? `Email: ${customerEmail}` : null,\n      customerPhone ? `Phone: ${customerPhone}` : null,\n      passengers ? `Passengers: ${passengers}` : null,\n      from ? `From: ${from}` : null,\n      to ? `To: ${to}` : null,\n      vehicle ? `Vehicle: ${vehicle}` : null,\n      '',\n      multiTour ? '--- Order Pricing (shared across all tours in this order) ---' : '--- Pricing ---',\n      `Overall Trip Cost: ${currencySymbol}${overallPrice}`,\n      `Paid via ${order.payment_method_title || order.payment_method}: ${currencySymbol}${paidNow.toFixed(2)}`,\n      balanceDue > 0 ? `Balance Due on Arrival (Cash): ${currencySymbol}${balanceDue.toFixed(2)}` : `Balance Due: ${currencySymbol}0.00 (fully paid)`\n    ].filter(line => line !== null);\n\n    results.push({\n      json: {\n        eventId,\n        summary: `${tourName} - ${customerName}`,\n        description: descLines.join('\\n'),\n        startDateTime,\n        endDateTime\n      }\n    });\n  }\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -896,
+        -304
+      ],
+      "id": "19c67106-4e5c-4bf3-a536-a04e751bb849",
+      "name": "Extract Paid Tour Items"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -272,
+        -304
+      ],
+      "id": "352211ff-c8ec-4fd0-a8c7-6e37a07323cb",
+      "name": "Loop Tour Items"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.googleapis.com/calendar/v3/calendars/3c1c31b0bb9cecb83a09f7c9f9c92d4fd6ca27423c3011cbebe15f3e4bf6b93e@group.calendar.google.com/events",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleCalendarOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { id: $json.eventId, summary: $json.summary, description: $json.description, start: { dateTime: $json.startDateTime, timeZone: \"America/Costa_Rica\" }, end: { dateTime: $json.endDateTime, timeZone: \"America/Costa_Rica\" }, reminders: { useDefault: false, overrides: [ { method: \"popup\", minutes: 1440 }, { method: \"popup\", minutes: 60 } ] } } }}",
+        "options": {
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -48,
+        -224
+      ],
+      "id": "33f8e1d5-9bfa-4fe7-8fb2-751b0d94fd92",
+      "name": "Create Calendar Event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "Z1BOdU3imFKWfkoq",
+          "name": "Google Calendar account ROY"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "insert-failed-1",
+              "leftValue": "={{ !!$json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        176,
+        -224
+      ],
+      "id": "89309534-05ca-491c-8272-2c5aa3a8c8eb",
+      "name": "If Insert Failed"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://www.googleapis.com/calendar/v3/calendars/3c1c31b0bb9cecb83a09f7c9f9c92d4fd6ca27423c3011cbebe15f3e4bf6b93e@group.calendar.google.com/events/{{ $('Loop Tour Items').item.json.eventId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleCalendarOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { summary: $('Loop Tour Items').item.json.summary, description: $('Loop Tour Items').item.json.description, start: { dateTime: $('Loop Tour Items').item.json.startDateTime, timeZone: \"America/Costa_Rica\" }, end: { dateTime: $('Loop Tour Items').item.json.endDateTime, timeZone: \"America/Costa_Rica\" }, reminders: { useDefault: false, overrides: [ { method: \"popup\", minutes: 1440 }, { method: \"popup\", minutes: 60 } ] } } }}",
+        "options": {
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        368,
+        -528
+      ],
+      "id": "62c06337-ea4c-4e85-8904-053d263991d8",
+      "name": "Update Calendar Event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "Z1BOdU3imFKWfkoq",
+          "name": "Google Calendar account ROY"
+        }
+      },
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Recent Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Recent Orders": {
+      "main": [
+        [
+          {
+            "node": "Extract Paid Tour Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Paid Tour Items": {
+      "main": [
+        [
+          {
+            "node": "Loop Tour Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Tour Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Create Calendar Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Calendar Event": {
+      "main": [
+        [
+          {
+            "node": "If Insert Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Insert Failed": {
+      "main": [
+        [
+          {
+            "node": "Update Calendar Event",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Tour Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Calendar Event": {
+      "main": [
+        [
+          {
+            "node": "Loop Tour Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": [
+        null
+      ],
+      "recurrenceRuleSignatures": [
+        null
+      ]
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "8cb72e9a-70b3-4386-967f-5824b3dbaa28",
+  "activeVersionId": "8cb72e9a-70b3-4386-967f-5824b3dbaa28",
+  "versionCounter": 36,
+  "triggerCount": 1,
+  "sourceWorkflowId": null,
+  "shared": [
+    {
+      "updatedAt": "2026-08-06T06:15:06.579Z",
+      "createdAt": "2026-08-06T06:15:06.579Z",
+      "role": "workflow:owner",
+      "workflowId": "nCuSVzLVgng6anR4",
+      "projectId": "YKlYEXVQgHIwARXX",
+      "project": {
+        "updatedAt": "2026-06-03T11:53:20.889Z",
+        "createdAt": "2026-06-03T11:18:36.474Z",
+        "id": "YKlYEXVQgHIwARXX",
+        "name": "Rashid  Mustafa <info@costaricatransfersandtours.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-08-06T09:29:27.000Z",
+    "createdAt": "2026-08-06T09:29:23.531Z",
+    "versionId": "8cb72e9a-70b3-4386-967f-5824b3dbaa28",
+    "workflowId": "nCuSVzLVgng6anR4",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -1344,
+          -304
+        ],
+        "id": "8ad9ce15-d3b3-4494-ab28-281e9d5f760e",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "url": "https://dev.costaricatransfersandtours.com/wp-json/wc/v3/orders",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "wooCommerceApi",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "per_page",
+                "value": "100"
+              },
+              {
+                "name": "orderby",
+                "value": "date"
+              },
+              {
+                "name": "order",
+                "value": "desc"
+              }
+            ]
+          },
+          "options": {
+            "response": {
+              "response": {}
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -1120,
+          -304
+        ],
+        "id": "20dbfe4b-4ec2-407e-a09e-a6970d52d564",
+        "name": "Get Recent Orders",
+        "credentials": {
+          "wooCommerceApi": {
+            "id": "VG4pKpGtyLYBwOzq",
+            "name": "CRTT WooCommerce"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const orders = $input.all().map(item => item.json);\nconst PAID_STATUSES = ['processing', 'completed'];\n\nfunction extractMeta(metaArr, key) {\n  const found = (metaArr || []).find(m => m.key === key);\n  return found ? found.value : '';\n}\n\nfunction decodeEntities(str) {\n  if (!str) return str;\n  return str.replace(/&#038;/g, '&').replace(/&amp;/g, '&');\n}\n\nfunction parsePickupDateTime(isoDate, timeStr) {\n  if (!isoDate) return null;\n  const timeMatch = (timeStr || '').match(/(\\d{1,2}):(\\d{2})\\s*(AM|PM)/i);\n  let hour = 9, minute = 0;\n  if (timeMatch) {\n    hour = parseInt(timeMatch[1], 10);\n    minute = parseInt(timeMatch[2], 10);\n    const ampm = timeMatch[3].toUpperCase();\n    if (ampm === 'PM' && hour !== 12) hour += 12;\n    if (ampm === 'AM' && hour === 12) hour = 0;\n  }\n  const pad = n => String(n).padStart(2, '0');\n  return `${isoDate}T${pad(hour)}:${pad(minute)}:00`;\n}\n\nconst results = [];\n\nfor (const order of orders) {\n  if (!PAID_STATUSES.includes(order.status)) continue;\n\n  const customerName = `${order.billing?.first_name || ''} ${order.billing?.last_name || ''}`.trim();\n  const customerEmail = order.billing?.email || '';\n  const customerPhone = order.billing?.phone || '';\n\n  const balanceFee = (order.fee_lines || []).find(f => (f.name || '').toLowerCase().includes('balance'));\n  const balanceDue = balanceFee ? Math.abs(parseFloat(balanceFee.total || '0')) : 0;\n  const paidNow = parseFloat(order.total || '0');\n  const overallPrice = (paidNow + balanceDue).toFixed(2);\n  const currencySymbol = order.currency_symbol || '$';\n  const multiTour = (order.line_items || []).length > 1;\n\n  for (const li of (order.line_items || [])) {\n    const meta = li.meta_data || [];\n    const tourName = decodeEntities(extractMeta(meta, 'Tour')) || decodeEntities(extractMeta(meta, 'Vehicle')) || li.name;\n    const tourType = decodeEntities(extractMeta(meta, 'product_name_n'));\n    const isoDate = extractMeta(meta, 'Date');\n    const pickupTime = extractMeta(meta, 'Pickup Time');\n    const from = decodeEntities(extractMeta(meta, 'From'));\n    const to = decodeEntities(extractMeta(meta, 'To'));\n    const passengers = extractMeta(meta, 'Passengers');\n    const vehicle = extractMeta(meta, 'Vehicle');\n    const durationMeta = extractMeta(meta, 'Duration') || extractMeta(meta, 'duration_name_n');\n\n    const startDateTime = parsePickupDateTime(isoDate, pickupTime);\n    if (!startDateTime) continue;\n\n    let durationHours = 2;\n    const durMatch = (durationMeta || '').match(/(\\d+)\\s*hours?/i);\n    if (durMatch) durationHours = parseInt(durMatch[1], 10);\n\n    const start = new Date(startDateTime);\n    const end = new Date(start.getTime() + durationHours * 60 * 60 * 1000);\n    const pad = n => String(n).padStart(2, '0');\n    const endDateTime = `${end.getFullYear()}-${pad(end.getMonth()+1)}-${pad(end.getDate())}T${pad(end.getHours())}:${pad(end.getMinutes())}:00`;\n\n    const eventId = `crtt${order.id}o${li.id}`;\n\n    const descLines = [\n      `Order #${order.number} (ID ${order.id})`,\n      tourType ? `Type: ${tourType}` : null,\n      `Customer: ${customerName}`,\n      customerEmail ? `Email: ${customerEmail}` : null,\n      customerPhone ? `Phone: ${customerPhone}` : null,\n      passengers ? `Passengers: ${passengers}` : null,\n      from ? `From: ${from}` : null,\n      to ? `To: ${to}` : null,\n      vehicle ? `Vehicle: ${vehicle}` : null,\n      '',\n      multiTour ? '--- Order Pricing (shared across all tours in this order) ---' : '--- Pricing ---',\n      `Overall Trip Cost: ${currencySymbol}${overallPrice}`,\n      `Paid via ${order.payment_method_title || order.payment_method}: ${currencySymbol}${paidNow.toFixed(2)}`,\n      balanceDue > 0 ? `Balance Due on Arrival (Cash): ${currencySymbol}${balanceDue.toFixed(2)}` : `Balance Due: ${currencySymbol}0.00 (fully paid)`\n    ].filter(line => line !== null);\n\n    results.push({\n      json: {\n        eventId,\n        summary: `${tourName} - ${customerName}`,\n        description: descLines.join('\\n'),\n        startDateTime,\n        endDateTime\n      }\n    });\n  }\n}\n\nreturn results;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -896,
+          -304
+        ],
+        "id": "19c67106-4e5c-4bf3-a536-a04e751bb849",
+        "name": "Extract Paid Tour Items"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          -272,
+          -304
+        ],
+        "id": "352211ff-c8ec-4fd0-a8c7-6e37a07323cb",
+        "name": "Loop Tour Items"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://www.googleapis.com/calendar/v3/calendars/3c1c31b0bb9cecb83a09f7c9f9c92d4fd6ca27423c3011cbebe15f3e4bf6b93e@group.calendar.google.com/events",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "googleCalendarOAuth2Api",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ { id: $json.eventId, summary: $json.summary, description: $json.description, start: { dateTime: $json.startDateTime, timeZone: \"America/Costa_Rica\" }, end: { dateTime: $json.endDateTime, timeZone: \"America/Costa_Rica\" }, reminders: { useDefault: false, overrides: [ { method: \"popup\", minutes: 1440 }, { method: \"popup\", minutes: 60 } ] } } }}",
+          "options": {
+            "response": {
+              "response": {}
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -48,
+          -224
+        ],
+        "id": "33f8e1d5-9bfa-4fe7-8fb2-751b0d94fd92",
+        "name": "Create Calendar Event",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "Z1BOdU3imFKWfkoq",
+            "name": "Google Calendar account ROY"
+          }
+        },
+        "continueOnFail": true
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "insert-failed-1",
+                "leftValue": "={{ !!$json.error }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          176,
+          -224
+        ],
+        "id": "89309534-05ca-491c-8272-2c5aa3a8c8eb",
+        "name": "If Insert Failed"
+      },
+      {
+        "parameters": {
+          "method": "PUT",
+          "url": "=https://www.googleapis.com/calendar/v3/calendars/3c1c31b0bb9cecb83a09f7c9f9c92d4fd6ca27423c3011cbebe15f3e4bf6b93e@group.calendar.google.com/events/{{ $('Loop Tour Items').item.json.eventId }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "googleCalendarOAuth2Api",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ { summary: $('Loop Tour Items').item.json.summary, description: $('Loop Tour Items').item.json.description, start: { dateTime: $('Loop Tour Items').item.json.startDateTime, timeZone: \"America/Costa_Rica\" }, end: { dateTime: $('Loop Tour Items').item.json.endDateTime, timeZone: \"America/Costa_Rica\" }, reminders: { useDefault: false, overrides: [ { method: \"popup\", minutes: 1440 }, { method: \"popup\", minutes: 60 } ] } } }}",
+          "options": {
+            "response": {
+              "response": {}
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          368,
+          -528
+        ],
+        "id": "62c06337-ea4c-4e85-8904-053d263991d8",
+        "name": "Update Calendar Event",
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "Z1BOdU3imFKWfkoq",
+            "name": "Google Calendar account ROY"
+          }
+        },
+        "continueOnFail": true
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Get Recent Orders",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Recent Orders": {
+        "main": [
+          [
+            {
+              "node": "Extract Paid Tour Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract Paid Tour Items": {
+        "main": [
+          [
+            {
+              "node": "Loop Tour Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Tour Items": {
+        "main": [
+          [],
+          [
+            {
+              "node": "Create Calendar Event",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create Calendar Event": {
+        "main": [
+          [
+            {
+              "node": "If Insert Failed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Insert Failed": {
+        "main": [
+          [
+            {
+              "node": "Update Calendar Event",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Loop Tour Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update Calendar Event": {
+        "main": [
+          [
+            {
+              "node": "Loop Tour Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Rashid  Mustafa",
+    "name": "Version 8cb72e9a",
+    "description": "",
+    "autosaved": true,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-08-06T09:29:27.433Z",
+        "id": 201,
+        "workflowId": "nCuSVzLVgng6anR4",
+        "versionId": "8cb72e9a-70b3-4386-967f-5824b3dbaa28",
+        "event": "activated",
+        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
+      }
+    ]
+  }
+}

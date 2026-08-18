@@ -1,0 +1,993 @@
+{
+  "updatedAt": "2026-08-05T09:21:13.578Z",
+  "createdAt": "2026-07-24T10:05:18.902Z",
+  "id": "OsGh5tDXTX5QIw1g",
+  "name": "CRTT - Remove from Cart API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "email"
+            },
+            {
+              "name": "item_key"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -3968,
+        -416
+      ],
+      "id": "b5d06f52-710f-4469-a840-d8cb759b7403",
+      "name": "When Called by Agent"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M",
+          "mode": "list",
+          "cachedResultName": "CRTT",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 792596630,
+          "mode": "list",
+          "cachedResultName": "cart",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M/edit#gid=792596630"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "email",
+              "lookupValue": "={{ $json.email }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -3744,
+        -416
+      ],
+      "id": "32da9e58-5198-4a7e-9697-69bb4ce4b4f1",
+      "name": "Read Cart Row",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xFfEyXD6mSbnGpjq",
+          "name": "Google Sheets account ROY"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('When Called by Agent').first().json;\nconst rows = $input.all();\nconst existing = rows.length > 0 ? rows[0].json : null;\n\nif (!existing || !existing.cart_cookie) {\n  return [{ json: { error: true, message: 'No active cart was found for this email, so there is nothing to remove.' } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    email: input.email,\n    item_key: input.item_key,\n    cart_id: existing.cart_id,\n    cart_cookie: existing.cart_cookie\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3520,
+        -416
+      ],
+      "id": "367ac2b1-0f5a-44ca-b50d-19c052d8188c",
+      "name": "Check Cart Exists"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -3296,
+        -416
+      ],
+      "id": "be21c203-b325-4d15-91cb-169a30df8a9a",
+      "name": "If Cart Found"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { error: true, message: $json.message } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3296,
+        -192
+      ],
+      "id": "2ea29cb6-448f-44bb-8e8c-4f5ffa17274f",
+      "name": "Return No Cart Error"
+    },
+    {
+      "parameters": {
+        "url": "https://dev.costaricatransfersandtours.com/wp-json/wc/store/v1/cart",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Cookie",
+              "value": "={{ $json.cart_cookie }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -2672,
+        -432
+      ],
+      "id": "e5102a1e-f612-472a-a840-bacea3e65b6d",
+      "name": "Get Fresh Cart"
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.first().json;\nconst prior = $('Check Cart Exists').first().json;\nconst cartToken = resp.headers?.['cart-token'] || resp.headers?.['Cart-Token'];\n\nif (!cartToken) {\n  return [{ json: { error: true, message: 'Could not establish a cart session for this email.' } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    email: prior.email,\n    item_key: prior.item_key,\n    cart_id: prior.cart_id,\n    cart_cookie: prior.cart_cookie,\n    cart_token: cartToken\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2448,
+        -432
+      ],
+      "id": "a3f523a9-936a-4b03-8a3b-81ff2f8d5c1b",
+      "name": "Extract Cart Token"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cond-2",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2224,
+        -432
+      ],
+      "id": "37d0ec24-085f-4461-a344-d10746ab9eeb",
+      "name": "If Token Found"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { error: true, message: $json.message } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2224,
+        -208
+      ],
+      "id": "b415b66b-b6a0-447a-bc5e-1ff6d7f3bcaa",
+      "name": "Return No Session Error"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://dev.costaricatransfersandtours.com/wp-json/wc/store/v1/cart/remove-item",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Cart-Token",
+              "value": "={{ $json.cart_token }}"
+            },
+            {
+              "name": "Cookie",
+              "value": "={{ $json.cart_cookie }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ key: $json.item_key }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1552,
+        -448
+      ],
+      "id": "08b1c2ff-5773-4098-a859-1dfdb0df87d3",
+      "name": "Remove Item via Store API"
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.first().json;\nconst prior = $('Extract Cart Token').first().json;\nconst body = resp.body;\nconst statusOk = resp.statusCode >= 200 && resp.statusCode < 300;\nconst stillPresent = Array.isArray(body?.items) && body.items.some(i => i.key === prior.item_key);\n\nif (!statusOk || stillPresent) {\n  return [{ json: { error: true, message: 'Failed to remove the item from the cart.' } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    email: prior.email,\n    item_key: prior.item_key,\n    remaining_items: body.items?.length ?? 0\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1328,
+        -448
+      ],
+      "id": "a2b0d148-bcd4-47c1-b6bb-f2f8de1f5840",
+      "name": "Check Removal Result"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cond-3",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1104,
+        -448
+      ],
+      "id": "3633e57b-8a91-424b-b7ed-2af385f96d33",
+      "name": "If Removed Successfully"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { error: false, message: 'Item removed from cart successfully.', remaining_items: $json.remaining_items } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -880,
+        -544
+      ],
+      "id": "c1ada7cf-e7df-4cd8-83cd-2758c6616bab",
+      "name": "Return Removal Success"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { error: true, message: $json.message } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -880,
+        -352
+      ],
+      "id": "9a5b7ee0-3c81-43d8-b8ba-6832b6f1a702",
+      "name": "Return Removal Failure"
+    }
+  ],
+  "connections": {
+    "When Called by Agent": {
+      "main": [
+        [
+          {
+            "node": "Read Cart Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Cart Row": {
+      "main": [
+        [
+          {
+            "node": "Check Cart Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Cart Exists": {
+      "main": [
+        [
+          {
+            "node": "If Cart Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Cart Found": {
+      "main": [
+        [
+          {
+            "node": "Get Fresh Cart",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return No Cart Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Fresh Cart": {
+      "main": [
+        [
+          {
+            "node": "Extract Cart Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Cart Token": {
+      "main": [
+        [
+          {
+            "node": "If Token Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Token Found": {
+      "main": [
+        [
+          {
+            "node": "Remove Item via Store API",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return No Session Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Item via Store API": {
+      "main": [
+        [
+          {
+            "node": "Check Removal Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Removal Result": {
+      "main": [
+        [
+          {
+            "node": "If Removed Successfully",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Removed Successfully": {
+      "main": [
+        [
+          {
+            "node": "Return Removal Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Removal Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "de0191f1-0e4f-42a5-8fb2-20fc5aacebed",
+  "activeVersionId": "de0191f1-0e4f-42a5-8fb2-20fc5aacebed",
+  "versionCounter": 12,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "shared": [
+    {
+      "updatedAt": "2026-07-24T10:05:18.908Z",
+      "createdAt": "2026-07-24T10:05:18.908Z",
+      "role": "workflow:owner",
+      "workflowId": "OsGh5tDXTX5QIw1g",
+      "projectId": "YKlYEXVQgHIwARXX",
+      "project": {
+        "updatedAt": "2026-06-03T11:53:20.889Z",
+        "createdAt": "2026-06-03T11:18:36.474Z",
+        "id": "YKlYEXVQgHIwARXX",
+        "name": "Rashid  Mustafa <info@costaricatransfersandtours.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-08-05T09:22:18.000Z",
+    "createdAt": "2026-08-05T09:21:13.579Z",
+    "versionId": "de0191f1-0e4f-42a5-8fb2-20fc5aacebed",
+    "workflowId": "OsGh5tDXTX5QIw1g",
+    "nodes": [
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "email"
+              },
+              {
+                "name": "item_key"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          -3968,
+          -416
+        ],
+        "id": "b5d06f52-710f-4469-a840-d8cb759b7403",
+        "name": "When Called by Agent"
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M",
+            "mode": "list",
+            "cachedResultName": "CRTT",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 792596630,
+            "mode": "list",
+            "cachedResultName": "cart",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M/edit#gid=792596630"
+          },
+          "filtersUI": {
+            "values": [
+              {
+                "lookupColumn": "email",
+                "lookupValue": "={{ $json.email }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.5,
+        "position": [
+          -3744,
+          -416
+        ],
+        "id": "32da9e58-5198-4a7e-9697-69bb4ce4b4f1",
+        "name": "Read Cart Row",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "xFfEyXD6mSbnGpjq",
+            "name": "Google Sheets account ROY"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const input = $('When Called by Agent').first().json;\nconst rows = $input.all();\nconst existing = rows.length > 0 ? rows[0].json : null;\n\nif (!existing || !existing.cart_cookie) {\n  return [{ json: { error: true, message: 'No active cart was found for this email, so there is nothing to remove.' } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    email: input.email,\n    item_key: input.item_key,\n    cart_id: existing.cart_id,\n    cart_cookie: existing.cart_cookie\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -3520,
+          -416
+        ],
+        "id": "367ac2b1-0f5a-44ca-b50d-19c052d8188c",
+        "name": "Check Cart Exists"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "cond-1",
+                "leftValue": "={{ $json.error }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "false",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -3296,
+          -416
+        ],
+        "id": "be21c203-b325-4d15-91cb-169a30df8a9a",
+        "name": "If Cart Found"
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { error: true, message: $json.message } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -3296,
+          -192
+        ],
+        "id": "2ea29cb6-448f-44bb-8e8c-4f5ffa17274f",
+        "name": "Return No Cart Error"
+      },
+      {
+        "parameters": {
+          "url": "https://dev.costaricatransfersandtours.com/wp-json/wc/store/v1/cart",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Cookie",
+                "value": "={{ $json.cart_cookie }}"
+              }
+            ]
+          },
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -2672,
+          -432
+        ],
+        "id": "e5102a1e-f612-472a-a840-bacea3e65b6d",
+        "name": "Get Fresh Cart"
+      },
+      {
+        "parameters": {
+          "jsCode": "const resp = $input.first().json;\nconst prior = $('Check Cart Exists').first().json;\nconst cartToken = resp.headers?.['cart-token'] || resp.headers?.['Cart-Token'];\n\nif (!cartToken) {\n  return [{ json: { error: true, message: 'Could not establish a cart session for this email.' } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    email: prior.email,\n    item_key: prior.item_key,\n    cart_id: prior.cart_id,\n    cart_cookie: prior.cart_cookie,\n    cart_token: cartToken\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2448,
+          -432
+        ],
+        "id": "a3f523a9-936a-4b03-8a3b-81ff2f8d5c1b",
+        "name": "Extract Cart Token"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "cond-2",
+                "leftValue": "={{ $json.error }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "false",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -2224,
+          -432
+        ],
+        "id": "37d0ec24-085f-4461-a344-d10746ab9eeb",
+        "name": "If Token Found"
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { error: true, message: $json.message } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2224,
+          -208
+        ],
+        "id": "b415b66b-b6a0-447a-bc5e-1ff6d7f3bcaa",
+        "name": "Return No Session Error"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://dev.costaricatransfersandtours.com/wp-json/wc/store/v1/cart/remove-item",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Cart-Token",
+                "value": "={{ $json.cart_token }}"
+              },
+              {
+                "name": "Cookie",
+                "value": "={{ $json.cart_cookie }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ key: $json.item_key }) }}",
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -1552,
+          -448
+        ],
+        "id": "08b1c2ff-5773-4098-a859-1dfdb0df87d3",
+        "name": "Remove Item via Store API"
+      },
+      {
+        "parameters": {
+          "jsCode": "const resp = $input.first().json;\nconst prior = $('Extract Cart Token').first().json;\nconst body = resp.body;\nconst statusOk = resp.statusCode >= 200 && resp.statusCode < 300;\nconst stillPresent = Array.isArray(body?.items) && body.items.some(i => i.key === prior.item_key);\n\nif (!statusOk || stillPresent) {\n  return [{ json: { error: true, message: 'Failed to remove the item from the cart.' } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    email: prior.email,\n    item_key: prior.item_key,\n    remaining_items: body.items?.length ?? 0\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1328,
+          -448
+        ],
+        "id": "a2b0d148-bcd4-47c1-b6bb-f2f8de1f5840",
+        "name": "Check Removal Result"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "cond-3",
+                "leftValue": "={{ $json.error }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "false",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -1104,
+          -448
+        ],
+        "id": "3633e57b-8a91-424b-b7ed-2af385f96d33",
+        "name": "If Removed Successfully"
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { error: false, message: 'Item removed from cart successfully.', remaining_items: $json.remaining_items } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -880,
+          -544
+        ],
+        "id": "c1ada7cf-e7df-4cd8-83cd-2758c6616bab",
+        "name": "Return Removal Success"
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { error: true, message: $json.message } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -880,
+          -352
+        ],
+        "id": "9a5b7ee0-3c81-43d8-b8ba-6832b6f1a702",
+        "name": "Return Removal Failure"
+      }
+    ],
+    "connections": {
+      "When Called by Agent": {
+        "main": [
+          [
+            {
+              "node": "Read Cart Row",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Read Cart Row": {
+        "main": [
+          [
+            {
+              "node": "Check Cart Exists",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Cart Exists": {
+        "main": [
+          [
+            {
+              "node": "If Cart Found",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Cart Found": {
+        "main": [
+          [
+            {
+              "node": "Get Fresh Cart",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Return No Cart Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Fresh Cart": {
+        "main": [
+          [
+            {
+              "node": "Extract Cart Token",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract Cart Token": {
+        "main": [
+          [
+            {
+              "node": "If Token Found",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Token Found": {
+        "main": [
+          [
+            {
+              "node": "Remove Item via Store API",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Return No Session Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Remove Item via Store API": {
+        "main": [
+          [
+            {
+              "node": "Check Removal Result",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Removal Result": {
+        "main": [
+          [
+            {
+              "node": "If Removed Successfully",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Removed Successfully": {
+        "main": [
+          [
+            {
+              "node": "Return Removal Success",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Return Removal Failure",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Rashid  Mustafa",
+    "name": "Version de0191f1",
+    "description": "",
+    "autosaved": true,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-08-05T09:22:18.567Z",
+        "id": 184,
+        "workflowId": "OsGh5tDXTX5QIw1g",
+        "versionId": "de0191f1-0e4f-42a5-8fb2-20fc5aacebed",
+        "event": "activated",
+        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
+      }
+    ]
+  }
+}

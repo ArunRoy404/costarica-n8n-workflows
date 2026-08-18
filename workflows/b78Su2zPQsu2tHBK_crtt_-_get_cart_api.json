@@ -1,0 +1,592 @@
+{
+  "updatedAt": "2026-08-05T09:20:37.561Z",
+  "createdAt": "2026-07-04T11:03:47.939Z",
+  "id": "b78Su2zPQsu2tHBK",
+  "name": "CRTT - Get Cart API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "email"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -928,
+        32
+      ],
+      "id": "a6ded701-dde3-4ff0-aa04-0a37d0cad6b2",
+      "name": "When Called by Agent"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M",
+          "mode": "list",
+          "cachedResultName": "CRTT",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 792596630,
+          "mode": "list",
+          "cachedResultName": "cart",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M/edit#gid=792596630"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "email",
+              "lookupValue": "={{ $json.email }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -304,
+        16
+      ],
+      "id": "51725b9c-3aee-4468-95e2-e1b1ebf628b7",
+      "name": "Read Cart Row",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xFfEyXD6mSbnGpjq",
+          "name": "Google Sheets account ROY"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://dev.costaricatransfersandtours.com/wp-json/wc/store/v1/cart",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Cookie",
+              "value": "={{ $json.cart_cookie }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        176,
+        0
+      ],
+      "id": "dcafdfc9-4021-4963-bc75-217417d9994f",
+      "name": "Get Cart"
+    },
+    {
+      "parameters": {
+        "jsCode": "// WooCommerce Store API sometimes returns the cart wrapped in an array — normalize that first.\nlet body = $input.first().json;\nif (Array.isArray(body)) body = body[0];\n\nconst items = body.items || [];\n\nif (items.length === 0) {\n  return [{ json: { cart_empty: true, message: 'The cart is currently empty.', items: [] } }];\n}\n\n// Helper to pull a named field out of WooCommerce's item_data array\nconst getField = (item, label) => {\n  const found = (item.item_data || []).find(f => f.name === label);\n  return found ? found.value : undefined;\n};\n\nconst minorUnit = body.totals?.currency_minor_unit ?? 2;\nconst divisor = Math.pow(10, minorUnit);\nconst toAmount = (raw) => Number(raw || 0) / divisor;\n\nconst summarizedItems = items.map(item => ({\n  key: item.key,\n  service_name: getField(item, 'Tour') || getField(item, 'Boat Charter') || item.name,\n  passengers: getField(item, 'Passengers'),\n  date: getField(item, 'Pickup Date'),\n  pickup_time: getField(item, 'Pickup Time'),\n  pickup_location: getField(item, 'Pickup Location'),\n  duration_label: getField(item, 'Duration'),\n  line_total: toAmount(item.totals?.line_total)\n}));\n\nconst currencySymbol = body.totals?.currency_symbol || '$';\n\n// Pull fee amounts by key rather than by array position, so order changes don't break this.\nconst findFee = (key) => (body.fees || []).find(f => f.key === key);\nconst paymentFee = findFee('payment-fee');\nconst balanceFee = findFee('balance-to-pay-on-arrival');\n\nconst subtotal = toAmount(body.totals?.total_items);\nconst salesTax = toAmount(body.totals?.total_tax);\nconst paymentFeeAmount = toAmount(paymentFee?.totals?.total);\n// Balance-to-pay-on-arrival is stored as a negative offset — show it as the positive amount owed on arrival.\nconst balanceOnArrival = Math.abs(toAmount(balanceFee?.totals?.total));\nconst totalPayNow = toAmount(body.totals?.total_price);\n\nreturn [{\n  json: {\n    cart_empty: false,\n    item_count: summarizedItems.length,\n    currency_symbol: currencySymbol,\n    items: summarizedItems,\n    price_breakdown: {\n      subtotal: subtotal,\n      sales_tax: salesTax,\n      payment_fee: paymentFeeAmount,\n      balance_to_pay_on_arrival: balanceOnArrival,\n      total_pay_now: totalPayNow\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        0
+      ],
+      "id": "8e291bad-9375-42c3-9fa4-0e05eb0a5e76",
+      "name": "Summarize Cart"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { cart_empty: true, message: 'No cart found yet for this email.', items: [] } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        272
+      ],
+      "id": "ea98afdd-2240-4275-90e4-e72029a34cec",
+      "name": "No Cart Yet"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { no_email_provided: true, message: 'No user email was provided.', items: [] } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -704,
+        240
+      ],
+      "id": "da8c323d-ed81-4b84-9aaf-b2e0ecebb371",
+      "name": "No Email"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5b2b4d92-e9a7-4e8a-8e7d-d94729ed140c",
+              "leftValue": "={{ $json.email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -704,
+        32
+      ],
+      "id": "1911168b-7c2b-4c15-8bbd-679412f88807",
+      "name": "If email"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "14c07d0a-6e86-4901-926b-6aa790ff55f8",
+              "leftValue": "={{ $json.cart_cookie }}",
+              "rightValue": "={{ $json.cart_cookie }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -128,
+        16
+      ],
+      "id": "4678f485-f79c-4901-9522-492d14884b3f",
+      "name": "If cart cookies"
+    }
+  ],
+  "connections": {
+    "When Called by Agent": {
+      "main": [
+        [
+          {
+            "node": "If email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Cart Row": {
+      "main": [
+        [
+          {
+            "node": "If cart cookies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Cart": {
+      "main": [
+        [
+          {
+            "node": "Summarize Cart",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If email": {
+      "main": [
+        [
+          {
+            "node": "Read Cart Row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If cart cookies": {
+      "main": [
+        [
+          {
+            "node": "Get Cart",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Cart Yet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "810cf7ab-4f02-433e-9aea-694d116fe915",
+  "activeVersionId": "810cf7ab-4f02-433e-9aea-694d116fe915",
+  "versionCounter": 66,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "shared": [
+    {
+      "updatedAt": "2026-07-04T11:03:47.941Z",
+      "createdAt": "2026-07-04T11:03:47.941Z",
+      "role": "workflow:owner",
+      "workflowId": "b78Su2zPQsu2tHBK",
+      "projectId": "YKlYEXVQgHIwARXX",
+      "project": {
+        "updatedAt": "2026-06-03T11:53:20.889Z",
+        "createdAt": "2026-06-03T11:18:36.474Z",
+        "id": "YKlYEXVQgHIwARXX",
+        "name": "Rashid  Mustafa <info@costaricatransfersandtours.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-08-05T09:20:41.000Z",
+    "createdAt": "2026-08-05T09:20:37.563Z",
+    "versionId": "810cf7ab-4f02-433e-9aea-694d116fe915",
+    "workflowId": "b78Su2zPQsu2tHBK",
+    "nodes": [
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "email"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          -928,
+          32
+        ],
+        "id": "a6ded701-dde3-4ff0-aa04-0a37d0cad6b2",
+        "name": "When Called by Agent"
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M",
+            "mode": "list",
+            "cachedResultName": "CRTT",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 792596630,
+            "mode": "list",
+            "cachedResultName": "cart",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M/edit#gid=792596630"
+          },
+          "filtersUI": {
+            "values": [
+              {
+                "lookupColumn": "email",
+                "lookupValue": "={{ $json.email }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.5,
+        "position": [
+          -304,
+          16
+        ],
+        "id": "51725b9c-3aee-4468-95e2-e1b1ebf628b7",
+        "name": "Read Cart Row",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "xFfEyXD6mSbnGpjq",
+            "name": "Google Sheets account ROY"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "url": "https://dev.costaricatransfersandtours.com/wp-json/wc/store/v1/cart",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Cookie",
+                "value": "={{ $json.cart_cookie }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          176,
+          0
+        ],
+        "id": "dcafdfc9-4021-4963-bc75-217417d9994f",
+        "name": "Get Cart"
+      },
+      {
+        "parameters": {
+          "jsCode": "// WooCommerce Store API sometimes returns the cart wrapped in an array — normalize that first.\nlet body = $input.first().json;\nif (Array.isArray(body)) body = body[0];\n\nconst items = body.items || [];\n\nif (items.length === 0) {\n  return [{ json: { cart_empty: true, message: 'The cart is currently empty.', items: [] } }];\n}\n\n// Helper to pull a named field out of WooCommerce's item_data array\nconst getField = (item, label) => {\n  const found = (item.item_data || []).find(f => f.name === label);\n  return found ? found.value : undefined;\n};\n\nconst minorUnit = body.totals?.currency_minor_unit ?? 2;\nconst divisor = Math.pow(10, minorUnit);\nconst toAmount = (raw) => Number(raw || 0) / divisor;\n\nconst summarizedItems = items.map(item => ({\n  key: item.key,\n  service_name: getField(item, 'Tour') || getField(item, 'Boat Charter') || item.name,\n  passengers: getField(item, 'Passengers'),\n  date: getField(item, 'Pickup Date'),\n  pickup_time: getField(item, 'Pickup Time'),\n  pickup_location: getField(item, 'Pickup Location'),\n  duration_label: getField(item, 'Duration'),\n  line_total: toAmount(item.totals?.line_total)\n}));\n\nconst currencySymbol = body.totals?.currency_symbol || '$';\n\n// Pull fee amounts by key rather than by array position, so order changes don't break this.\nconst findFee = (key) => (body.fees || []).find(f => f.key === key);\nconst paymentFee = findFee('payment-fee');\nconst balanceFee = findFee('balance-to-pay-on-arrival');\n\nconst subtotal = toAmount(body.totals?.total_items);\nconst salesTax = toAmount(body.totals?.total_tax);\nconst paymentFeeAmount = toAmount(paymentFee?.totals?.total);\n// Balance-to-pay-on-arrival is stored as a negative offset — show it as the positive amount owed on arrival.\nconst balanceOnArrival = Math.abs(toAmount(balanceFee?.totals?.total));\nconst totalPayNow = toAmount(body.totals?.total_price);\n\nreturn [{\n  json: {\n    cart_empty: false,\n    item_count: summarizedItems.length,\n    currency_symbol: currencySymbol,\n    items: summarizedItems,\n    price_breakdown: {\n      subtotal: subtotal,\n      sales_tax: salesTax,\n      payment_fee: paymentFeeAmount,\n      balance_to_pay_on_arrival: balanceOnArrival,\n      total_pay_now: totalPayNow\n    }\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          368,
+          0
+        ],
+        "id": "8e291bad-9375-42c3-9fa4-0e05eb0a5e76",
+        "name": "Summarize Cart"
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { cart_empty: true, message: 'No cart found yet for this email.', items: [] } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -128,
+          272
+        ],
+        "id": "ea98afdd-2240-4275-90e4-e72029a34cec",
+        "name": "No Cart Yet"
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { no_email_provided: true, message: 'No user email was provided.', items: [] } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -704,
+          240
+        ],
+        "id": "da8c323d-ed81-4b84-9aaf-b2e0ecebb371",
+        "name": "No Email"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "5b2b4d92-e9a7-4e8a-8e7d-d94729ed140c",
+                "leftValue": "={{ $json.email }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -704,
+          32
+        ],
+        "id": "1911168b-7c2b-4c15-8bbd-679412f88807",
+        "name": "If email"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "14c07d0a-6e86-4901-926b-6aa790ff55f8",
+                "leftValue": "={{ $json.cart_cookie }}",
+                "rightValue": "={{ $json.cart_cookie }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -128,
+          16
+        ],
+        "id": "4678f485-f79c-4901-9522-492d14884b3f",
+        "name": "If cart cookies"
+      }
+    ],
+    "connections": {
+      "When Called by Agent": {
+        "main": [
+          [
+            {
+              "node": "If email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Read Cart Row": {
+        "main": [
+          [
+            {
+              "node": "If cart cookies",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Cart": {
+        "main": [
+          [
+            {
+              "node": "Summarize Cart",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If email": {
+        "main": [
+          [
+            {
+              "node": "Read Cart Row",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "No Email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If cart cookies": {
+        "main": [
+          [
+            {
+              "node": "Get Cart",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "No Cart Yet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Rashid  Mustafa",
+    "name": "Version 810cf7ab",
+    "description": "",
+    "autosaved": true,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-08-05T09:20:41.395Z",
+        "id": 182,
+        "workflowId": "b78Su2zPQsu2tHBK",
+        "versionId": "810cf7ab-4f02-433e-9aea-694d116fe915",
+        "event": "activated",
+        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
+      }
+    ]
+  }
+}

@@ -1,0 +1,708 @@
+{
+  "updatedAt": "2026-08-06T10:49:30.750Z",
+  "createdAt": "2026-08-06T10:31:37.816Z",
+  "id": "6TmemRadcJokPItN",
+  "name": "CRTT - Check Boat Charter Availability",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "date"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -2496,
+        176
+      ],
+      "id": "a5944d5b-a024-4036-8511-fe233b6fe2b0",
+      "name": "When Called by Agent"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "date-notempty",
+              "leftValue": "={{ $json.date }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2272,
+        176
+      ],
+      "id": "e654c6a8-61b9-4c43-bc08-e03df7a680be",
+      "name": "If Date Provided"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { isValid: false, available: false, checkDate: null, reason: 'no_date_provided', message: 'No date was provided to check. Please ask the user which date they want to check or book.' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2272,
+        416
+      ],
+      "id": "0b962205-0c8b-4db6-a297-9b6d4992e0fa",
+      "name": "No Date Provided"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawDate = $('When Called by Agent').first().json.date;\n\nfunction toIsoDate(input) {\n  if (!input) return null;\n  const isoMatch = String(input).match(/^(\\d{4})-(\\d{2})-(\\d{2})/);\n  if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;\n\n  const parsed = new Date(input);\n  if (isNaN(parsed.getTime())) return null;\n\n  const pad = n => String(n).padStart(2, '0');\n  return `${parsed.getFullYear()}-${pad(parsed.getMonth()+1)}-${pad(parsed.getDate())}`;\n}\n\nconst isoDate = toIsoDate(rawDate);\n\nif (!isoDate) {\n  return [{\n    json: {\n      isValid: false,\n      available: false,\n      checkDate: rawDate || null,\n      reason: 'invalid_date',\n      message: 'The date provided could not be understood. Please ask the user to confirm the exact date (e.g. \"August 10, 2026\").'\n    }\n  }];\n}\n\nconst now = new Date();\nconst crOffsetMs = 6 * 60 * 60 * 1000; // UTC-6, no DST\nconst crNow = new Date(now.getTime() - crOffsetMs);\nconst pad = n => String(n).padStart(2, '0');\nconst todayIso = `${crNow.getFullYear()}-${pad(crNow.getMonth()+1)}-${pad(crNow.getDate())}`;\n\nif (isoDate < todayIso) {\n  return [{\n    json: {\n      isValid: false,\n      available: false,\n      checkDate: isoDate,\n      reason: 'past_date',\n      message: 'That date is in the past. Please ask the user for a future date.'\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    isValid: true,\n    checkDate: isoDate\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1888,
+        160
+      ],
+      "id": "7b1ad157-f80c-4a04-b71c-2735b7adc1f0",
+      "name": "Normalize & Validate Date"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "valid-cond1",
+              "leftValue": "={{ $json.isValid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1664,
+        160
+      ],
+      "id": "19ef78b7-72b4-46b4-867f-dae73dd1fe6b",
+      "name": "If Valid Date"
+    },
+    {
+      "parameters": {
+        "jsCode": "// isValid is false — Normalize & Validate Date already built the correct\n// error payload (invalid_date or past_date). Just pass it through as-is.\nreturn [{ json: $input.first().json }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1664,
+        416
+      ],
+      "id": "ca82f8ab-4f0f-4749-bae6-3df62b9ddc5a",
+      "name": "Invalid Date Response"
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/calendar/v3/calendars/3c1c31b0bb9cecb83a09f7c9f9c92d4fd6ca27423c3011cbebe15f3e4bf6b93e@group.calendar.google.com/events",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleCalendarOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "timeMin",
+              "value": "={{ $json.checkDate }}T00:00:00-06:00"
+            },
+            {
+              "name": "timeMax",
+              "value": "={{ $json.checkDate }}T23:59:59-06:00"
+            },
+            {
+              "name": "singleEvents",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1216,
+        144
+      ],
+      "id": "bb51b6f5-f9e9-4029-abc7-a0d5e29bd382",
+      "name": "Get Calendar Events for Date",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "Z1BOdU3imFKWfkoq",
+          "name": "Google Calendar account ROY"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "calendar-error-cond",
+              "leftValue": "={{ !!$json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -992,
+        144
+      ],
+      "id": "946d1915-07dc-4685-979a-85520ad0caf3",
+      "name": "If Calendar Lookup Failed"
+    },
+    {
+      "parameters": {
+        "jsCode": "const checkDate = $('Normalize & Validate Date').item.json.checkDate;\nreturn [{\n  json: {\n    isValid: true,\n    available: false,\n    checkDate,\n    reason: 'availability_check_failed',\n    message: 'The availability check could not be completed right now due to a temporary system issue. Do not assume the date is available — ask the user to try again in a moment, or offer to check a different date.'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -768,
+        64
+      ],
+      "id": "6b6d57b0-9e66-441d-98cd-2e8c270c6b72",
+      "name": "Calendar Lookup Error"
+    },
+    {
+      "parameters": {
+        "jsCode": "const checkDate = $('Normalize & Validate Date').item.json.checkDate;\nconst response = $input.first().json;\nconst events = response.items || [];\n\nfunction extractLine(desc, label) {\n  const re = new RegExp(`${label}:\\\\s*(.+)`, 'i');\n  const match = (desc || '').match(re);\n  return match ? match[1].trim() : null;\n}\n\nconst boatEvents = events.filter(ev => (ev.description || '').match(/Type:\\s*Boat Charters/i));\n\nif (boatEvents.length > 0) {\n  const conflict = boatEvents[0];\n  return [{\n    json: {\n      isValid: true,\n      available: false,\n      checkDate,\n      reason: 'boat_already_booked',\n      message: `Boat charters are fully booked on ${checkDate}. Only one boat charter can be booked per day, and that day is already taken.`,\n      conflicting_booking: {\n        summary: conflict.summary,\n        start: conflict.start?.dateTime || conflict.start?.date,\n        pickup_time: extractLine(conflict.description, 'Pickup Time') || null\n      }\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    isValid: true,\n    available: true,\n    checkDate,\n    reason: 'no_conflict',\n    message: `No boat charter is booked on ${checkDate}. This date is available.`,\n    otherToursThatDay: events.length\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -768,
+        224
+      ],
+      "id": "7debd777-8bda-4e04-b32e-62d7eda79543",
+      "name": "Check Boat Conflict"
+    }
+  ],
+  "connections": {
+    "When Called by Agent": {
+      "main": [
+        [
+          {
+            "node": "If Date Provided",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Date Provided": {
+      "main": [
+        [
+          {
+            "node": "Normalize & Validate Date",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Date Provided",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize & Validate Date": {
+      "main": [
+        [
+          {
+            "node": "If Valid Date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Valid Date": {
+      "main": [
+        [
+          {
+            "node": "Get Calendar Events for Date",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Invalid Date Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Calendar Events for Date": {
+      "main": [
+        [
+          {
+            "node": "If Calendar Lookup Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Calendar Lookup Failed": {
+      "main": [
+        [
+          {
+            "node": "Calendar Lookup Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Boat Conflict",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "7294a9f1-9061-49ed-af5d-1b0e2e3fdc13",
+  "activeVersionId": "7294a9f1-9061-49ed-af5d-1b0e2e3fdc13",
+  "versionCounter": 15,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "shared": [
+    {
+      "updatedAt": "2026-08-06T10:31:37.818Z",
+      "createdAt": "2026-08-06T10:31:37.818Z",
+      "role": "workflow:owner",
+      "workflowId": "6TmemRadcJokPItN",
+      "projectId": "YKlYEXVQgHIwARXX",
+      "project": {
+        "updatedAt": "2026-06-03T11:53:20.889Z",
+        "createdAt": "2026-06-03T11:18:36.474Z",
+        "id": "YKlYEXVQgHIwARXX",
+        "name": "Rashid  Mustafa <info@costaricatransfersandtours.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-08-06T10:50:20.000Z",
+    "createdAt": "2026-08-06T10:49:30.751Z",
+    "versionId": "7294a9f1-9061-49ed-af5d-1b0e2e3fdc13",
+    "workflowId": "6TmemRadcJokPItN",
+    "nodes": [
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "date"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          -2496,
+          176
+        ],
+        "id": "a5944d5b-a024-4036-8511-fe233b6fe2b0",
+        "name": "When Called by Agent"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "date-notempty",
+                "leftValue": "={{ $json.date }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -2272,
+          176
+        ],
+        "id": "e654c6a8-61b9-4c43-bc08-e03df7a680be",
+        "name": "If Date Provided"
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { isValid: false, available: false, checkDate: null, reason: 'no_date_provided', message: 'No date was provided to check. Please ask the user which date they want to check or book.' } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2272,
+          416
+        ],
+        "id": "0b962205-0c8b-4db6-a297-9b6d4992e0fa",
+        "name": "No Date Provided"
+      },
+      {
+        "parameters": {
+          "jsCode": "const rawDate = $('When Called by Agent').first().json.date;\n\nfunction toIsoDate(input) {\n  if (!input) return null;\n  const isoMatch = String(input).match(/^(\\d{4})-(\\d{2})-(\\d{2})/);\n  if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;\n\n  const parsed = new Date(input);\n  if (isNaN(parsed.getTime())) return null;\n\n  const pad = n => String(n).padStart(2, '0');\n  return `${parsed.getFullYear()}-${pad(parsed.getMonth()+1)}-${pad(parsed.getDate())}`;\n}\n\nconst isoDate = toIsoDate(rawDate);\n\nif (!isoDate) {\n  return [{\n    json: {\n      isValid: false,\n      available: false,\n      checkDate: rawDate || null,\n      reason: 'invalid_date',\n      message: 'The date provided could not be understood. Please ask the user to confirm the exact date (e.g. \"August 10, 2026\").'\n    }\n  }];\n}\n\nconst now = new Date();\nconst crOffsetMs = 6 * 60 * 60 * 1000; // UTC-6, no DST\nconst crNow = new Date(now.getTime() - crOffsetMs);\nconst pad = n => String(n).padStart(2, '0');\nconst todayIso = `${crNow.getFullYear()}-${pad(crNow.getMonth()+1)}-${pad(crNow.getDate())}`;\n\nif (isoDate < todayIso) {\n  return [{\n    json: {\n      isValid: false,\n      available: false,\n      checkDate: isoDate,\n      reason: 'past_date',\n      message: 'That date is in the past. Please ask the user for a future date.'\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    isValid: true,\n    checkDate: isoDate\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1888,
+          160
+        ],
+        "id": "7b1ad157-f80c-4a04-b71c-2735b7adc1f0",
+        "name": "Normalize & Validate Date"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "valid-cond1",
+                "leftValue": "={{ $json.isValid }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -1664,
+          160
+        ],
+        "id": "19ef78b7-72b4-46b4-867f-dae73dd1fe6b",
+        "name": "If Valid Date"
+      },
+      {
+        "parameters": {
+          "jsCode": "// isValid is false — Normalize & Validate Date already built the correct\n// error payload (invalid_date or past_date). Just pass it through as-is.\nreturn [{ json: $input.first().json }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1664,
+          416
+        ],
+        "id": "ca82f8ab-4f0f-4749-bae6-3df62b9ddc5a",
+        "name": "Invalid Date Response"
+      },
+      {
+        "parameters": {
+          "url": "=https://www.googleapis.com/calendar/v3/calendars/3c1c31b0bb9cecb83a09f7c9f9c92d4fd6ca27423c3011cbebe15f3e4bf6b93e@group.calendar.google.com/events",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "googleCalendarOAuth2Api",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "timeMin",
+                "value": "={{ $json.checkDate }}T00:00:00-06:00"
+              },
+              {
+                "name": "timeMax",
+                "value": "={{ $json.checkDate }}T23:59:59-06:00"
+              },
+              {
+                "name": "singleEvents",
+                "value": "true"
+              }
+            ]
+          },
+          "options": {
+            "response": {
+              "response": {}
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -1216,
+          144
+        ],
+        "id": "bb51b6f5-f9e9-4029-abc7-a0d5e29bd382",
+        "name": "Get Calendar Events for Date",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleCalendarOAuth2Api": {
+            "id": "Z1BOdU3imFKWfkoq",
+            "name": "Google Calendar account ROY"
+          }
+        },
+        "continueOnFail": true
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "calendar-error-cond",
+                "leftValue": "={{ !!$json.error }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -992,
+          144
+        ],
+        "id": "946d1915-07dc-4685-979a-85520ad0caf3",
+        "name": "If Calendar Lookup Failed"
+      },
+      {
+        "parameters": {
+          "jsCode": "const checkDate = $('Normalize & Validate Date').item.json.checkDate;\nreturn [{\n  json: {\n    isValid: true,\n    available: false,\n    checkDate,\n    reason: 'availability_check_failed',\n    message: 'The availability check could not be completed right now due to a temporary system issue. Do not assume the date is available — ask the user to try again in a moment, or offer to check a different date.'\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -768,
+          64
+        ],
+        "id": "6b6d57b0-9e66-441d-98cd-2e8c270c6b72",
+        "name": "Calendar Lookup Error"
+      },
+      {
+        "parameters": {
+          "jsCode": "const checkDate = $('Normalize & Validate Date').item.json.checkDate;\nconst response = $input.first().json;\nconst events = response.items || [];\n\nfunction extractLine(desc, label) {\n  const re = new RegExp(`${label}:\\\\s*(.+)`, 'i');\n  const match = (desc || '').match(re);\n  return match ? match[1].trim() : null;\n}\n\nconst boatEvents = events.filter(ev => (ev.description || '').match(/Type:\\s*Boat Charters/i));\n\nif (boatEvents.length > 0) {\n  const conflict = boatEvents[0];\n  return [{\n    json: {\n      isValid: true,\n      available: false,\n      checkDate,\n      reason: 'boat_already_booked',\n      message: `Boat charters are fully booked on ${checkDate}. Only one boat charter can be booked per day, and that day is already taken.`,\n      conflicting_booking: {\n        summary: conflict.summary,\n        start: conflict.start?.dateTime || conflict.start?.date,\n        pickup_time: extractLine(conflict.description, 'Pickup Time') || null\n      }\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    isValid: true,\n    available: true,\n    checkDate,\n    reason: 'no_conflict',\n    message: `No boat charter is booked on ${checkDate}. This date is available.`,\n    otherToursThatDay: events.length\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -768,
+          224
+        ],
+        "id": "7debd777-8bda-4e04-b32e-62d7eda79543",
+        "name": "Check Boat Conflict"
+      }
+    ],
+    "connections": {
+      "When Called by Agent": {
+        "main": [
+          [
+            {
+              "node": "If Date Provided",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Date Provided": {
+        "main": [
+          [
+            {
+              "node": "Normalize & Validate Date",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "No Date Provided",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Normalize & Validate Date": {
+        "main": [
+          [
+            {
+              "node": "If Valid Date",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Valid Date": {
+        "main": [
+          [
+            {
+              "node": "Get Calendar Events for Date",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Invalid Date Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Calendar Events for Date": {
+        "main": [
+          [
+            {
+              "node": "If Calendar Lookup Failed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Calendar Lookup Failed": {
+        "main": [
+          [
+            {
+              "node": "Calendar Lookup Error",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Check Boat Conflict",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Rashid  Mustafa",
+    "name": "Version 7294a9f1",
+    "description": "",
+    "autosaved": true,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-08-06T10:50:20.809Z",
+        "id": 208,
+        "workflowId": "6TmemRadcJokPItN",
+        "versionId": "7294a9f1-9061-49ed-af5d-1b0e2e3fdc13",
+        "event": "activated",
+        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
+      }
+    ]
+  }
+}

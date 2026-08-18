@@ -1,0 +1,1488 @@
+{
+  "updatedAt": "2026-08-05T09:06:29.208Z",
+  "createdAt": "2026-07-30T05:24:40.294Z",
+  "id": "ElKNfXom6KIH1y3h",
+  "name": "CRTT - Checkout API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "email"
+            },
+            {
+              "name": "first_name"
+            },
+            {
+              "name": "last_name"
+            },
+            {
+              "name": "company"
+            },
+            {
+              "name": "address_1"
+            },
+            {
+              "name": "address_2"
+            },
+            {
+              "name": "city"
+            },
+            {
+              "name": "state"
+            },
+            {
+              "name": "postcode"
+            },
+            {
+              "name": "country"
+            },
+            {
+              "name": "phone"
+            },
+            {
+              "name": "customer_note"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -7040,
+        -1552
+      ],
+      "id": "f4cd1c51-51b7-485e-a782-d59782fc0a54",
+      "name": "When Called by Agent"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M",
+          "mode": "list",
+          "cachedResultName": "CRTT",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 792596630,
+          "mode": "list",
+          "cachedResultName": "cart",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M/edit#gid=792596630"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "email",
+              "lookupValue": "={{ $json.email }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -6816,
+        -1552
+      ],
+      "id": "f737016c-d746-4c70-bc9b-c25fc7d1cdf0",
+      "name": "Read Cart Row",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xFfEyXD6mSbnGpjq",
+          "name": "Google Sheets account ROY"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('When Called by Agent').first().json;\nconst rows = $input.all();\nconst existing = rows.length > 0 ? rows[0].json : null;\n\nif (!existing || !existing.cart_cookie) {\n  return [{ json: { error: true, message: 'No active cart was found for this email, so there is nothing to check out.' } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    ...input,\n    cart_id: existing.cart_id,\n    cart_cookie: existing.cart_cookie\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6592,
+        -1552
+      ],
+      "id": "f1a980f2-a75e-4fba-a9f2-b507d84c31e1",
+      "name": "Check Cart Exists"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c-cond1",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -6368,
+        -1552
+      ],
+      "id": "ea38b4e9-5995-4174-80f9-74aaa8f101df",
+      "name": "If Cart Found"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { error: true, message: $json.message } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6368,
+        -1328
+      ],
+      "id": "c6c2987f-0909-4546-bd71-2c6c303df3d0",
+      "name": "Return No Cart Error"
+    },
+    {
+      "parameters": {
+        "url": "https://dev.costaricatransfersandtours.com/wp-json/wc/store/v1/cart",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Cookie",
+              "value": "={{ $json.cart_cookie }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -5856,
+        -1568
+      ],
+      "id": "a07bdd35-1a9d-4ba3-99c7-01a7a2fa28bb",
+      "name": "Get Fresh Cart"
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.first().json;\nconst prior = $('Check Cart Exists').first().json;\nconst cartToken = resp.headers?.['cart-token'] || resp.headers?.['Cart-Token'];\nconst nonce = resp.headers?.['nonce'] || resp.headers?.['Nonce'];\n\nif (!cartToken || !nonce) {\n  return [{ json: { error: true, message: 'Could not establish a secure checkout session. Please try again.' } }];\n}\n\nreturn [{\n  json: {\n    ...prior,\n    error: false,\n    cart_token: cartToken,\n    nonce: nonce\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5632,
+        -1568
+      ],
+      "id": "ea4ad806-5f7e-4c66-b1dd-99f4e4498991",
+      "name": "Extract Cart Token & Nonce"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c-cond2",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -5408,
+        -1568
+      ],
+      "id": "dac576d2-59af-4126-aba4-d62707f8e354",
+      "name": "If Session Found"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { error: true, message: $json.message } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5408,
+        -1344
+      ],
+      "id": "1aee3932-3f44-4d8d-9a3e-26220e49dcd9",
+      "name": "Return No Session Error"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json;\nconst required = ['first_name','last_name','address_1','city','state','postcode','country','email','phone'];\nconst missing = required.filter(f => !d[f] || String(d[f]).trim() === '');\n\nconst emailOk = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(d.email || '');\nconst countryOk = /^[A-Z]{2}$/.test((d.country || '').trim());\n\nif (missing.length > 0) {\n  return [{ json: { error: true, message: `Missing required billing info: ${missing.join(', ')}.` } }];\n}\n\nif (!emailOk) {\n  return [{ json: { error: true, message: 'The email address provided is not valid.' } }];\n}\n\nif (!countryOk) {\n  return [{ json: { error: true, message: 'Country must be a valid 2-letter country code (e.g. US, CR, GB).' } }];\n}\n\nreturn [{ json: { ...d, error: false } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4864,
+        -1584
+      ],
+      "id": "8de39f3b-7179-4a78-9858-26c9154889a6",
+      "name": "Validate Billing Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c-cond3",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -4640,
+        -1584
+      ],
+      "id": "65bb18fe-ae8f-4d29-bd3f-378b6ec24f19",
+      "name": "If Billing Valid"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { error: true, message: $json.message } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4640,
+        -1360
+      ],
+      "id": "f03d4a70-eb32-470f-ac66-2d41b6361a81",
+      "name": "Return Validation Error"
+    },
+    {
+      "parameters": {
+        "url": "=https://dev.costaricatransfersandtours.com/wp-json/wc/v3/data/countries/{{ $json.country }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "wooCommerceApi",
+        "options": {
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -4032,
+        -1600
+      ],
+      "id": "cc1c9cb7-5a47-47b1-8d99-445c715e2457",
+      "name": "Get Valid States for Country",
+      "credentials": {
+        "wooCommerceApi": {
+          "id": "VG4pKpGtyLYBwOzq",
+          "name": "CRTT WooCommerce"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const prior = $('Validate Billing Fields').first().json;\nconst countryData = $input.first().json;\nconst states = countryData.states || [];\n\nif (states.length === 0) {\n  return [{ json: { ...prior, error: false } }];\n}\n\nconst userInput = (prior.state || '').trim().toLowerCase();\n\nconst exactCodeMatch = states.find(s => s.code.toLowerCase() === userInput);\nif (exactCodeMatch) {\n  return [{ json: { ...prior, state: exactCodeMatch.code, error: false } }];\n}\n\nconst nameMatch = states.find(s =>\n  s.name.trim().toLowerCase() === userInput ||\n  s.name.trim().toLowerCase().includes(userInput) ||\n  userInput.includes(s.name.trim().toLowerCase())\n);\nif (nameMatch) {\n  return [{ json: { ...prior, state: nameMatch.code, error: false } }];\n}\n\nconst validNames = states.map(s => s.name.trim()).join(', ');\nreturn [{ json: { error: true, message: `\"${prior.state}\" isn't a recognized state/division for ${countryData.name}. Valid options: ${validNames}` } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3808,
+        -1600
+      ],
+      "id": "f957da49-2a7c-479e-876d-1c1380ae3b84",
+      "name": "Resolve State Code"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c-cond5",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -3584,
+        -1600
+      ],
+      "id": "3dea3b0c-be2d-4bc6-a96d-430825b12abb",
+      "name": "If State Resolved"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { error: true, message: $json.message } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3584,
+        -1376
+      ],
+      "id": "7f277b13-4bee-4058-888f-6ae404aed0c2",
+      "name": "Return State Error"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://dev.costaricatransfersandtours.com/wp-json/wc/store/v1/checkout",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Cart-Token",
+              "value": "={{ $json.cart_token }}"
+            },
+            {
+              "name": "Cookie",
+              "value": "={{ $json.cart_cookie }}"
+            },
+            {
+              "name": "Nonce",
+              "value": "={{ $json.nonce }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({\n  billing_address: {\n    first_name: $json.first_name,\n    last_name: $json.last_name,\n    company: $json.company || \"\",\n    address_1: $json.address_1,\n    address_2: $json.address_2 || \"\",\n    city: $json.city,\n    state: $json.state,\n    postcode: $json.postcode,\n    country: $json.country,\n    email: $json.email,\n    phone: $json.phone\n  },\n  customer_note: $json.customer_note || \"\",\n  create_account: false,\n  payment_method: \"ppcp-gateway\",\n  payment_data: [\n    { key: \"wc-ppcp-gateway-new-payment-method\", value: false }\n  ]\n}) }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -3024,
+        -1616
+      ],
+      "id": "87a5dffc-1054-42e2-ba04-d4652d01840b",
+      "name": "Submit Checkout"
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.first().json;\nconst prior = $('Resolve State Code').first().json;\nconst body = resp.body;\nconst statusOk = resp.statusCode >= 200 && resp.statusCode < 300;\n\nfunction extractErrorMessage(b) {\n  if (!b) return 'Checkout failed for an unknown reason.';\n  if (b.data?.errors?.billing) return 'Billing address issue: ' + b.data.errors.billing.join(', ');\n  if (b.data?.details) {\n    const messages = Object.values(b.data.details).map(d => d.message).filter(Boolean);\n    if (messages.length) return messages.join(', ');\n  }\n  if (b.message) return b.message;\n  return 'Checkout failed for an unknown reason.';\n}\n\nconst redirectUrl = body?.payment_result?.redirect_url;\n\nif (!statusOk || !redirectUrl) {\n  return [{ json: { error: true, message: extractErrorMessage(body) } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    order_id: body.order_id,\n    order_number: body.order_number,\n    order_key: body.order_key,\n    payment_status: body.payment_result?.payment_status,\n    redirect_url: redirectUrl,\n    email: prior.email\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2800,
+        -1616
+      ],
+      "id": "d67b91ed-941c-45c5-be4f-bc30794f7dff",
+      "name": "Check Checkout Result"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c-cond4",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2576,
+        -1616
+      ],
+      "id": "62011d24-fde5-4e0e-a38d-0b18f5025db1",
+      "name": "If Checkout Successful"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { error: false, message: 'Checkout created successfully. Redirect the user to PayPal to complete payment.', order_id: $json.order_id, order_number: $json.order_number, redirect_url: $json.redirect_url } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2352,
+        -1712
+      ],
+      "id": "014a24f6-29e1-4f1d-ad57-c68fcc45f172",
+      "name": "Return Checkout Success"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { error: true, message: $json.message } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2352,
+        -1504
+      ],
+      "id": "700f40b2-d714-404c-b00b-aea21f9cad7d",
+      "name": "Return Checkout Failure"
+    }
+  ],
+  "connections": {
+    "When Called by Agent": {
+      "main": [
+        [
+          {
+            "node": "Read Cart Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Cart Row": {
+      "main": [
+        [
+          {
+            "node": "Check Cart Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Cart Exists": {
+      "main": [
+        [
+          {
+            "node": "If Cart Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Cart Found": {
+      "main": [
+        [
+          {
+            "node": "Get Fresh Cart",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return No Cart Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Fresh Cart": {
+      "main": [
+        [
+          {
+            "node": "Extract Cart Token & Nonce",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Cart Token & Nonce": {
+      "main": [
+        [
+          {
+            "node": "If Session Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Session Found": {
+      "main": [
+        [
+          {
+            "node": "Validate Billing Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return No Session Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Billing Fields": {
+      "main": [
+        [
+          {
+            "node": "If Billing Valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Billing Valid": {
+      "main": [
+        [
+          {
+            "node": "Get Valid States for Country",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Valid States for Country": {
+      "main": [
+        [
+          {
+            "node": "Resolve State Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve State Code": {
+      "main": [
+        [
+          {
+            "node": "If State Resolved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If State Resolved": {
+      "main": [
+        [
+          {
+            "node": "Submit Checkout",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return State Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Submit Checkout": {
+      "main": [
+        [
+          {
+            "node": "Check Checkout Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Checkout Result": {
+      "main": [
+        [
+          {
+            "node": "If Checkout Successful",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Checkout Successful": {
+      "main": [
+        [
+          {
+            "node": "Return Checkout Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Checkout Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "d2ba9edc-de86-4965-8986-f601998a521f",
+  "activeVersionId": "d2ba9edc-de86-4965-8986-f601998a521f",
+  "versionCounter": 34,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "shared": [
+    {
+      "updatedAt": "2026-07-30T05:24:40.297Z",
+      "createdAt": "2026-07-30T05:24:40.297Z",
+      "role": "workflow:owner",
+      "workflowId": "ElKNfXom6KIH1y3h",
+      "projectId": "YKlYEXVQgHIwARXX",
+      "project": {
+        "updatedAt": "2026-06-03T11:53:20.889Z",
+        "createdAt": "2026-06-03T11:18:36.474Z",
+        "id": "YKlYEXVQgHIwARXX",
+        "name": "Rashid  Mustafa <info@costaricatransfersandtours.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-08-05T09:07:08.000Z",
+    "createdAt": "2026-08-05T09:06:29.209Z",
+    "versionId": "d2ba9edc-de86-4965-8986-f601998a521f",
+    "workflowId": "ElKNfXom6KIH1y3h",
+    "nodes": [
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "email"
+              },
+              {
+                "name": "first_name"
+              },
+              {
+                "name": "last_name"
+              },
+              {
+                "name": "company"
+              },
+              {
+                "name": "address_1"
+              },
+              {
+                "name": "address_2"
+              },
+              {
+                "name": "city"
+              },
+              {
+                "name": "state"
+              },
+              {
+                "name": "postcode"
+              },
+              {
+                "name": "country"
+              },
+              {
+                "name": "phone"
+              },
+              {
+                "name": "customer_note"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          -7040,
+          -1552
+        ],
+        "id": "f4cd1c51-51b7-485e-a782-d59782fc0a54",
+        "name": "When Called by Agent"
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M",
+            "mode": "list",
+            "cachedResultName": "CRTT",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 792596630,
+            "mode": "list",
+            "cachedResultName": "cart",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M/edit#gid=792596630"
+          },
+          "filtersUI": {
+            "values": [
+              {
+                "lookupColumn": "email",
+                "lookupValue": "={{ $json.email }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.5,
+        "position": [
+          -6816,
+          -1552
+        ],
+        "id": "f737016c-d746-4c70-bc9b-c25fc7d1cdf0",
+        "name": "Read Cart Row",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "xFfEyXD6mSbnGpjq",
+            "name": "Google Sheets account ROY"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const input = $('When Called by Agent').first().json;\nconst rows = $input.all();\nconst existing = rows.length > 0 ? rows[0].json : null;\n\nif (!existing || !existing.cart_cookie) {\n  return [{ json: { error: true, message: 'No active cart was found for this email, so there is nothing to check out.' } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    ...input,\n    cart_id: existing.cart_id,\n    cart_cookie: existing.cart_cookie\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -6592,
+          -1552
+        ],
+        "id": "f1a980f2-a75e-4fba-a9f2-b507d84c31e1",
+        "name": "Check Cart Exists"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "c-cond1",
+                "leftValue": "={{ $json.error }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "false",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -6368,
+          -1552
+        ],
+        "id": "ea38b4e9-5995-4174-80f9-74aaa8f101df",
+        "name": "If Cart Found"
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { error: true, message: $json.message } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -6368,
+          -1328
+        ],
+        "id": "c6c2987f-0909-4546-bd71-2c6c303df3d0",
+        "name": "Return No Cart Error"
+      },
+      {
+        "parameters": {
+          "url": "https://dev.costaricatransfersandtours.com/wp-json/wc/store/v1/cart",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Cookie",
+                "value": "={{ $json.cart_cookie }}"
+              }
+            ]
+          },
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -5856,
+          -1568
+        ],
+        "id": "a07bdd35-1a9d-4ba3-99c7-01a7a2fa28bb",
+        "name": "Get Fresh Cart"
+      },
+      {
+        "parameters": {
+          "jsCode": "const resp = $input.first().json;\nconst prior = $('Check Cart Exists').first().json;\nconst cartToken = resp.headers?.['cart-token'] || resp.headers?.['Cart-Token'];\nconst nonce = resp.headers?.['nonce'] || resp.headers?.['Nonce'];\n\nif (!cartToken || !nonce) {\n  return [{ json: { error: true, message: 'Could not establish a secure checkout session. Please try again.' } }];\n}\n\nreturn [{\n  json: {\n    ...prior,\n    error: false,\n    cart_token: cartToken,\n    nonce: nonce\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -5632,
+          -1568
+        ],
+        "id": "ea4ad806-5f7e-4c66-b1dd-99f4e4498991",
+        "name": "Extract Cart Token & Nonce"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "c-cond2",
+                "leftValue": "={{ $json.error }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "false",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -5408,
+          -1568
+        ],
+        "id": "dac576d2-59af-4126-aba4-d62707f8e354",
+        "name": "If Session Found"
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { error: true, message: $json.message } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -5408,
+          -1344
+        ],
+        "id": "1aee3932-3f44-4d8d-9a3e-26220e49dcd9",
+        "name": "Return No Session Error"
+      },
+      {
+        "parameters": {
+          "jsCode": "const d = $json;\nconst required = ['first_name','last_name','address_1','city','state','postcode','country','email','phone'];\nconst missing = required.filter(f => !d[f] || String(d[f]).trim() === '');\n\nconst emailOk = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(d.email || '');\nconst countryOk = /^[A-Z]{2}$/.test((d.country || '').trim());\n\nif (missing.length > 0) {\n  return [{ json: { error: true, message: `Missing required billing info: ${missing.join(', ')}.` } }];\n}\n\nif (!emailOk) {\n  return [{ json: { error: true, message: 'The email address provided is not valid.' } }];\n}\n\nif (!countryOk) {\n  return [{ json: { error: true, message: 'Country must be a valid 2-letter country code (e.g. US, CR, GB).' } }];\n}\n\nreturn [{ json: { ...d, error: false } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -4864,
+          -1584
+        ],
+        "id": "8de39f3b-7179-4a78-9858-26c9154889a6",
+        "name": "Validate Billing Fields"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "c-cond3",
+                "leftValue": "={{ $json.error }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "false",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -4640,
+          -1584
+        ],
+        "id": "65bb18fe-ae8f-4d29-bd3f-378b6ec24f19",
+        "name": "If Billing Valid"
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { error: true, message: $json.message } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -4640,
+          -1360
+        ],
+        "id": "f03d4a70-eb32-470f-ac66-2d41b6361a81",
+        "name": "Return Validation Error"
+      },
+      {
+        "parameters": {
+          "url": "=https://dev.costaricatransfersandtours.com/wp-json/wc/v3/data/countries/{{ $json.country }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "wooCommerceApi",
+          "options": {
+            "response": {
+              "response": {}
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -4032,
+          -1600
+        ],
+        "id": "cc1c9cb7-5a47-47b1-8d99-445c715e2457",
+        "name": "Get Valid States for Country",
+        "credentials": {
+          "wooCommerceApi": {
+            "id": "VG4pKpGtyLYBwOzq",
+            "name": "CRTT WooCommerce"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const prior = $('Validate Billing Fields').first().json;\nconst countryData = $input.first().json;\nconst states = countryData.states || [];\n\nif (states.length === 0) {\n  return [{ json: { ...prior, error: false } }];\n}\n\nconst userInput = (prior.state || '').trim().toLowerCase();\n\nconst exactCodeMatch = states.find(s => s.code.toLowerCase() === userInput);\nif (exactCodeMatch) {\n  return [{ json: { ...prior, state: exactCodeMatch.code, error: false } }];\n}\n\nconst nameMatch = states.find(s =>\n  s.name.trim().toLowerCase() === userInput ||\n  s.name.trim().toLowerCase().includes(userInput) ||\n  userInput.includes(s.name.trim().toLowerCase())\n);\nif (nameMatch) {\n  return [{ json: { ...prior, state: nameMatch.code, error: false } }];\n}\n\nconst validNames = states.map(s => s.name.trim()).join(', ');\nreturn [{ json: { error: true, message: `\"${prior.state}\" isn't a recognized state/division for ${countryData.name}. Valid options: ${validNames}` } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -3808,
+          -1600
+        ],
+        "id": "f957da49-2a7c-479e-876d-1c1380ae3b84",
+        "name": "Resolve State Code"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "c-cond5",
+                "leftValue": "={{ $json.error }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "false",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -3584,
+          -1600
+        ],
+        "id": "3dea3b0c-be2d-4bc6-a96d-430825b12abb",
+        "name": "If State Resolved"
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { error: true, message: $json.message } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -3584,
+          -1376
+        ],
+        "id": "7f277b13-4bee-4058-888f-6ae404aed0c2",
+        "name": "Return State Error"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://dev.costaricatransfersandtours.com/wp-json/wc/store/v1/checkout",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Cart-Token",
+                "value": "={{ $json.cart_token }}"
+              },
+              {
+                "name": "Cookie",
+                "value": "={{ $json.cart_cookie }}"
+              },
+              {
+                "name": "Nonce",
+                "value": "={{ $json.nonce }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({\n  billing_address: {\n    first_name: $json.first_name,\n    last_name: $json.last_name,\n    company: $json.company || \"\",\n    address_1: $json.address_1,\n    address_2: $json.address_2 || \"\",\n    city: $json.city,\n    state: $json.state,\n    postcode: $json.postcode,\n    country: $json.country,\n    email: $json.email,\n    phone: $json.phone\n  },\n  customer_note: $json.customer_note || \"\",\n  create_account: false,\n  payment_method: \"ppcp-gateway\",\n  payment_data: [\n    { key: \"wc-ppcp-gateway-new-payment-method\", value: false }\n  ]\n}) }}",
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -3024,
+          -1616
+        ],
+        "id": "87a5dffc-1054-42e2-ba04-d4652d01840b",
+        "name": "Submit Checkout"
+      },
+      {
+        "parameters": {
+          "jsCode": "const resp = $input.first().json;\nconst prior = $('Resolve State Code').first().json;\nconst body = resp.body;\nconst statusOk = resp.statusCode >= 200 && resp.statusCode < 300;\n\nfunction extractErrorMessage(b) {\n  if (!b) return 'Checkout failed for an unknown reason.';\n  if (b.data?.errors?.billing) return 'Billing address issue: ' + b.data.errors.billing.join(', ');\n  if (b.data?.details) {\n    const messages = Object.values(b.data.details).map(d => d.message).filter(Boolean);\n    if (messages.length) return messages.join(', ');\n  }\n  if (b.message) return b.message;\n  return 'Checkout failed for an unknown reason.';\n}\n\nconst redirectUrl = body?.payment_result?.redirect_url;\n\nif (!statusOk || !redirectUrl) {\n  return [{ json: { error: true, message: extractErrorMessage(body) } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    order_id: body.order_id,\n    order_number: body.order_number,\n    order_key: body.order_key,\n    payment_status: body.payment_result?.payment_status,\n    redirect_url: redirectUrl,\n    email: prior.email\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2800,
+          -1616
+        ],
+        "id": "d67b91ed-941c-45c5-be4f-bc30794f7dff",
+        "name": "Check Checkout Result"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "c-cond4",
+                "leftValue": "={{ $json.error }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "false",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -2576,
+          -1616
+        ],
+        "id": "62011d24-fde5-4e0e-a38d-0b18f5025db1",
+        "name": "If Checkout Successful"
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { error: false, message: 'Checkout created successfully. Redirect the user to PayPal to complete payment.', order_id: $json.order_id, order_number: $json.order_number, redirect_url: $json.redirect_url } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2352,
+          -1712
+        ],
+        "id": "014a24f6-29e1-4f1d-ad57-c68fcc45f172",
+        "name": "Return Checkout Success"
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { error: true, message: $json.message } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2352,
+          -1504
+        ],
+        "id": "700f40b2-d714-404c-b00b-aea21f9cad7d",
+        "name": "Return Checkout Failure"
+      }
+    ],
+    "connections": {
+      "When Called by Agent": {
+        "main": [
+          [
+            {
+              "node": "Read Cart Row",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Read Cart Row": {
+        "main": [
+          [
+            {
+              "node": "Check Cart Exists",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Cart Exists": {
+        "main": [
+          [
+            {
+              "node": "If Cart Found",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Cart Found": {
+        "main": [
+          [
+            {
+              "node": "Get Fresh Cart",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Return No Cart Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Fresh Cart": {
+        "main": [
+          [
+            {
+              "node": "Extract Cart Token & Nonce",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract Cart Token & Nonce": {
+        "main": [
+          [
+            {
+              "node": "If Session Found",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Session Found": {
+        "main": [
+          [
+            {
+              "node": "Validate Billing Fields",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Return No Session Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Validate Billing Fields": {
+        "main": [
+          [
+            {
+              "node": "If Billing Valid",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Billing Valid": {
+        "main": [
+          [
+            {
+              "node": "Get Valid States for Country",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Return Validation Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Valid States for Country": {
+        "main": [
+          [
+            {
+              "node": "Resolve State Code",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Resolve State Code": {
+        "main": [
+          [
+            {
+              "node": "If State Resolved",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If State Resolved": {
+        "main": [
+          [
+            {
+              "node": "Submit Checkout",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Return State Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Submit Checkout": {
+        "main": [
+          [
+            {
+              "node": "Check Checkout Result",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Checkout Result": {
+        "main": [
+          [
+            {
+              "node": "If Checkout Successful",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Checkout Successful": {
+        "main": [
+          [
+            {
+              "node": "Return Checkout Success",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Return Checkout Failure",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Rashid  Mustafa",
+    "name": "Version d2ba9edc",
+    "description": "",
+    "autosaved": true,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-08-05T09:07:08.836Z",
+        "id": 180,
+        "workflowId": "ElKNfXom6KIH1y3h",
+        "versionId": "d2ba9edc-de86-4965-8986-f601998a521f",
+        "event": "activated",
+        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
+      }
+    ]
+  }
+}

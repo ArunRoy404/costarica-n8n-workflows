@@ -1,0 +1,1349 @@
+{
+  "updatedAt": "2026-08-10T11:11:46.696Z",
+  "createdAt": "2026-07-18T09:48:19.405Z",
+  "id": "qkkI8nmxhbe07bC4",
+  "name": "CRTT - Add Boat Charter to Cart API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "tour_id"
+            },
+            {
+              "name": "email"
+            },
+            {
+              "name": "passengers"
+            },
+            {
+              "name": "date"
+            },
+            {
+              "name": "pickup_location"
+            },
+            {
+              "name": "duration"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -4368,
+        -432
+      ],
+      "id": "ca064ab6-3709-42bd-872a-f4013079f520",
+      "name": "When Called by Agent"
+    },
+    {
+      "parameters": {
+        "url": "=https://dev.costaricatransfersandtours.com/wp-json/crtt/v1/services/boat_charter/{{ $json.tour_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -4176,
+        -432
+      ],
+      "id": "5f824e52-da16-4852-a8c1-ed4b10de22fd",
+      "name": "Fetch Charter Detail",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validates required fields, matches (duration_key × passengers) against rate_table\n// to confirm a valid boat/duration combination and get the correct pickup_time.\n// total_price is hardcoded to 5000 — the backend recalculates the real price/fees\n// regardless of what's submitted here, same as the tour flow.\n\nconst input = $('When Called by Agent').first().json;\nconst detail = $input.first().json;\n\n// Detail lookup failed (bad charter id, wrong service_type, deleted charter, etc.)\nif (!detail || detail.code) {\n  return [{\n    json: {\n      error: true,\n      message: detail?.message || 'Could not load boat charter detail data. Please check the charter ID.'\n    }\n  }];\n}\n\nconst required = ['tour_id', 'email', 'passengers', 'date', 'pickup_location', 'duration'];\nconst missing = required.filter(field => {\n  const val = input[field];\n  return val === undefined || val === null || String(val).trim() === '';\n});\n\nif (missing.length > 0) {\n  return [{ json: { error: true, message: `Missing required field(s): ${missing.join(', ')}` } }];\n}\n\n// ── Passenger + duration validation against rate_table ──────────────────\nconst passengers = Number(input.passengers);\n\nif (!Number.isFinite(passengers) || passengers <= 0) {\n  return [{ json: { error: true, message: 'Passengers must be a valid positive number.' } }];\n}\n\nconst rateTable = Array.isArray(detail.rate_table) ? detail.rate_table : [];\nconst durationKey = String(input.duration).trim();\n\nconst matchingDurationRows = rateTable.filter(r => r.duration_key === durationKey);\n\nif (matchingDurationRows.length === 0) {\n  return [{\n    json: {\n      error: true,\n      message: 'That duration option is not valid for this boat charter. Please choose one of the listed durations.'\n    }\n  }];\n}\n\nconst fitRow = matchingDurationRows.find(\n  r => passengers >= Number(r.min_pax) && passengers <= Number(r.max_pax)\n);\n\nif (!fitRow) {\n  const overallMin = Math.min(...matchingDurationRows.map(r => Number(r.min_pax)));\n  const overallMax = Math.max(...matchingDurationRows.map(r => Number(r.max_pax)));\n  return [{\n    json: {\n      error: true,\n      message: `Passengers must be between ${overallMin} and ${overallMax} for that duration.`\n    }\n  }];\n}\n\n// ── Date validation ───────────────────────────────────────────────────────\nconst dateStr = String(input.date).trim();\nconst dateFormatOk = /^\\d{4}-\\d{2}-\\d{2}$/.test(dateStr);\n\nif (!dateFormatOk) {\n  return [{ json: { error: true, message: 'Date must be in YYYY-MM-DD format.' } }];\n}\n\nconst parsedDate = DateTime.fromISO(dateStr, { zone: 'America/Costa_Rica' });\n\nif (!parsedDate.isValid) {\n  return [{ json: { error: true, message: 'Date is not a valid calendar date.' } }];\n}\n\nconst todayCR = DateTime.now().setZone('America/Costa_Rica').startOf('day');\n\nif (parsedDate.startOf('day') < todayCR) {\n  return [{ json: { error: true, message: 'That date has already passed — please choose a future date.' } }];\n}\n\n// ── Resolved values from the matched rate_table row ──────────────────────\nreturn [{\n  json: {\n    error: false,\n    tour_id: input.tour_id,\n    service_name: detail.title || `Charter ${input.tour_id}`,\n    passengers: passengers,\n    duration_label: fitRow.duration_label,\n    duration_api_value: fitRow.duration_key,\n    total_price: 5000,\n    pickup_time: fitRow.pickup_time || 'Not specified',\n    date: dateStr,\n    pickup_location: input.pickup_location,\n    email: input.email || ''\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3984,
+        -432
+      ],
+      "id": "4a385303-da13-408a-a9a5-8831e1754a41",
+      "name": "Validate + Calculate Price (Charter)"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "00fdffa6-d1f8-4294-ae11-2017fa307c0d",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -3584,
+        -432
+      ],
+      "id": "6d49f120-8c81-4624-a94d-79cc42b727af",
+      "name": "If Valid input"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { error: true, message: $json.message } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3584,
+        -208
+      ],
+      "id": "cbfbdf48-6563-4633-8b99-fcebde962d07",
+      "name": "Return Validation Error"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M",
+          "mode": "list",
+          "cachedResultName": "CRTT",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 792596630,
+          "mode": "list",
+          "cachedResultName": "cart",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M/edit#gid=792596630"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "email",
+              "lookupValue": "={{ $json.email }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -3184,
+        -448
+      ],
+      "id": "1cd5f115-e7de-445c-b7ce-15b98a379c34",
+      "name": "Read Cart Row",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xFfEyXD6mSbnGpjq",
+          "name": "Google Sheets account ROY"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Validate + Calculate Price (Charter)').first().json;\nconst rows = $input.all();\nconst existing = rows.length > 0 ? rows[0].json : null;\n\nreturn [{\n  json: {\n    email: input.email,\n    cart_id: existing?.cart_id || ('cart_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8)),\n    cart_cookie: existing?.cart_cookie || ''\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2992,
+        -448
+      ],
+      "id": "0688e4d3-60c4-42dc-b066-0cdc66a86862",
+      "name": "Normalize Cart Row"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "00fdffa6-d1f8-4294-ae11-2017fa307c0d",
+              "leftValue": "={{ $json.cart_cookie }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2800,
+        -448
+      ],
+      "id": "be027ac3-9e9c-4d64-839f-92087c0cfb8e",
+      "name": "Has Cart Cookie"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://dev.costaricatransfersandtours.com/wp-admin/admin-ajax.php",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Cookie",
+              "value": "={{ $json.cart_cookie }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "tb_add_tour_to_cart"
+            },
+            {
+              "name": "tour_id",
+              "value": "={{ $('Validate + Calculate Price (Charter)').item.json.tour_id }}"
+            },
+            {
+              "name": "passengers",
+              "value": "={{ $('Validate + Calculate Price (Charter)').item.json.passengers }}"
+            },
+            {
+              "name": "duration",
+              "value": "={{ $('Validate + Calculate Price (Charter)').item.json.duration_api_value }}"
+            },
+            {
+              "name": "date",
+              "value": "={{ $('Validate + Calculate Price (Charter)').item.json.date }}"
+            },
+            {
+              "name": "pickup",
+              "value": "={{ $('Validate + Calculate Price (Charter)').item.json.pickup_location }}"
+            },
+            {
+              "name": "pickup_time",
+              "value": "={{ $('Validate + Calculate Price (Charter)').item.json.pickup_time }}"
+            },
+            {
+              "name": "total",
+              "value": "={{ $('Validate + Calculate Price (Charter)').item.json.total_price }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -2400,
+        -560
+      ],
+      "id": "ff3925d9-9a04-4951-88e2-9f1221c454f6",
+      "name": "Add Charter to same cart"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://dev.costaricatransfersandtours.com/wp-admin/admin-ajax.php",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "tb_add_tour_to_cart"
+            },
+            {
+              "name": "tour_id",
+              "value": "={{ $('Validate + Calculate Price (Charter)').item.json.tour_id }}"
+            },
+            {
+              "name": "passengers",
+              "value": "={{ $('Validate + Calculate Price (Charter)').item.json.passengers }}"
+            },
+            {
+              "name": "duration",
+              "value": "={{ $('Validate + Calculate Price (Charter)').item.json.duration_api_value }}"
+            },
+            {
+              "name": "date",
+              "value": "={{ $('Validate + Calculate Price (Charter)').item.json.date }}"
+            },
+            {
+              "name": "pickup",
+              "value": "={{ $('Validate + Calculate Price (Charter)').item.json.pickup_location }}"
+            },
+            {
+              "name": "pickup_time",
+              "value": "={{ $('Validate + Calculate Price (Charter)').item.json.pickup_time }}"
+            },
+            {
+              "name": "total",
+              "value": "={{ $('Validate + Calculate Price (Charter)').item.json.total_price }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -2400,
+        -336
+      ],
+      "id": "29e1604b-c3f6-40c3-9f16-643858ec837a",
+      "name": "Add charter to cart"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "00fdffa6-d1f8-4294-ae11-2017fa307c0d",
+              "leftValue": "={{ $json.body.success }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1968,
+        -432
+      ],
+      "id": "67559e2b-8ac2-49e5-bc13-26ceb9e97b94",
+      "name": "If Add To Cart Fails"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { error: true, message: $input.first().json.body?.data?.message || 'Failed to add charter to cart.' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1968,
+        -192
+      ],
+      "id": "366d5fde-44c0-4904-806a-26abee653eb4",
+      "name": "Return Add to Cart Errors"
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.first().json;\nconst normalized = $('Normalize Cart Row').first().json;\n\nconst setCookie = resp.headers?.['set-cookie'] || [];\nconst freshCookie = setCookie.join('; ');\nconst hasSessionToken = /wp_woocommerce_session_/.test(freshCookie);\n\nreturn [{\n  json: {\n    email: normalized.email,\n    cart_id: normalized.cart_id,\n    cart_cookie: hasSessionToken ? freshCookie : normalized.cart_cookie\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1520,
+        -448
+      ],
+      "id": "61245cea-497c-46b6-9453-947f33d695a7",
+      "name": "Resolve Cart Cookie"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M",
+          "mode": "list",
+          "cachedResultName": "CRTT",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 792596630,
+          "mode": "list",
+          "cachedResultName": "cart",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M/edit#gid=792596630"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "cart_id": "={{ $json.cart_id }}",
+            "email": "={{ $json.email }}",
+            "cart_cookie": "={{ $json.cart_cookie }}",
+            "cart_updated_at": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "email"
+          ],
+          "schema": [
+            {
+              "id": "cart_id",
+              "displayName": "cart_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cart_cookie",
+              "displayName": "cart_cookie",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cart_updated_at",
+              "displayName": "cart_updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -1328,
+        -448
+      ],
+      "id": "a72fd9d9-0f9a-41dd-8193-da68c93b7f52",
+      "name": "Save Cart Cookie",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xFfEyXD6mSbnGpjq",
+          "name": "Google Sheets account ROY"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Clean confirmation payload for NEO — the actual cart item info,\n// not the raw Google Sheets row this node runs after.\n\nconst item = $('Validate + Calculate Price (Charter)').first().json;\n\nreturn [{\n  json: {\n    error: false,\n    message: 'Boat charter added to cart successfully.',\n    service_name: item.service_name,\n    tour_id: item.tour_id,\n    passengers: item.passengers,\n    duration_label: item.duration_label,\n    date: item.date,\n    pickup_location: item.pickup_location,\n    pickup_time: item.pickup_time,\n    total_price: item.total_price\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1136,
+        -448
+      ],
+      "id": "04fb338d-facb-4ba1-a321-f6983a859a43",
+      "name": "Return Success"
+    }
+  ],
+  "connections": {
+    "When Called by Agent": {
+      "main": [
+        [
+          {
+            "node": "Fetch Charter Detail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Charter Detail": {
+      "main": [
+        [
+          {
+            "node": "Validate + Calculate Price (Charter)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate + Calculate Price (Charter)": {
+      "main": [
+        [
+          {
+            "node": "If Valid input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Valid input": {
+      "main": [
+        [
+          {
+            "node": "Read Cart Row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Cart Row": {
+      "main": [
+        [
+          {
+            "node": "Normalize Cart Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Cart Row": {
+      "main": [
+        [
+          {
+            "node": "Has Cart Cookie",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Cart Cookie": {
+      "main": [
+        [
+          {
+            "node": "Add Charter to same cart",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Add charter to cart",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Charter to same cart": {
+      "main": [
+        [
+          {
+            "node": "If Add To Cart Fails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add charter to cart": {
+      "main": [
+        [
+          {
+            "node": "If Add To Cart Fails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Add To Cart Fails": {
+      "main": [
+        [
+          {
+            "node": "Resolve Cart Cookie",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Add to Cart Errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve Cart Cookie": {
+      "main": [
+        [
+          {
+            "node": "Save Cart Cookie",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Cart Cookie": {
+      "main": [
+        [
+          {
+            "node": "Return Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "2a04e111-9914-428d-88f0-cb55b00998c3",
+  "activeVersionId": "2a04e111-9914-428d-88f0-cb55b00998c3",
+  "versionCounter": 31,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "shared": [
+    {
+      "updatedAt": "2026-07-18T09:48:19.408Z",
+      "createdAt": "2026-07-18T09:48:19.408Z",
+      "role": "workflow:owner",
+      "workflowId": "qkkI8nmxhbe07bC4",
+      "projectId": "YKlYEXVQgHIwARXX",
+      "project": {
+        "updatedAt": "2026-06-03T11:53:20.889Z",
+        "createdAt": "2026-06-03T11:18:36.474Z",
+        "id": "YKlYEXVQgHIwARXX",
+        "name": "Rashid  Mustafa <info@costaricatransfersandtours.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-08-10T11:11:50.000Z",
+    "createdAt": "2026-08-10T11:11:46.698Z",
+    "versionId": "2a04e111-9914-428d-88f0-cb55b00998c3",
+    "workflowId": "qkkI8nmxhbe07bC4",
+    "nodes": [
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "tour_id"
+              },
+              {
+                "name": "email"
+              },
+              {
+                "name": "passengers"
+              },
+              {
+                "name": "date"
+              },
+              {
+                "name": "pickup_location"
+              },
+              {
+                "name": "duration"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          -4368,
+          -432
+        ],
+        "id": "ca064ab6-3709-42bd-872a-f4013079f520",
+        "name": "When Called by Agent"
+      },
+      {
+        "parameters": {
+          "url": "=https://dev.costaricatransfersandtours.com/wp-json/crtt/v1/services/boat_charter/{{ $json.tour_id }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -4176,
+          -432
+        ],
+        "id": "5f824e52-da16-4852-a8c1-ed4b10de22fd",
+        "name": "Fetch Charter Detail",
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Validates required fields, matches (duration_key × passengers) against rate_table\n// to confirm a valid boat/duration combination and get the correct pickup_time.\n// total_price is hardcoded to 5000 — the backend recalculates the real price/fees\n// regardless of what's submitted here, same as the tour flow.\n\nconst input = $('When Called by Agent').first().json;\nconst detail = $input.first().json;\n\n// Detail lookup failed (bad charter id, wrong service_type, deleted charter, etc.)\nif (!detail || detail.code) {\n  return [{\n    json: {\n      error: true,\n      message: detail?.message || 'Could not load boat charter detail data. Please check the charter ID.'\n    }\n  }];\n}\n\nconst required = ['tour_id', 'email', 'passengers', 'date', 'pickup_location', 'duration'];\nconst missing = required.filter(field => {\n  const val = input[field];\n  return val === undefined || val === null || String(val).trim() === '';\n});\n\nif (missing.length > 0) {\n  return [{ json: { error: true, message: `Missing required field(s): ${missing.join(', ')}` } }];\n}\n\n// ── Passenger + duration validation against rate_table ──────────────────\nconst passengers = Number(input.passengers);\n\nif (!Number.isFinite(passengers) || passengers <= 0) {\n  return [{ json: { error: true, message: 'Passengers must be a valid positive number.' } }];\n}\n\nconst rateTable = Array.isArray(detail.rate_table) ? detail.rate_table : [];\nconst durationKey = String(input.duration).trim();\n\nconst matchingDurationRows = rateTable.filter(r => r.duration_key === durationKey);\n\nif (matchingDurationRows.length === 0) {\n  return [{\n    json: {\n      error: true,\n      message: 'That duration option is not valid for this boat charter. Please choose one of the listed durations.'\n    }\n  }];\n}\n\nconst fitRow = matchingDurationRows.find(\n  r => passengers >= Number(r.min_pax) && passengers <= Number(r.max_pax)\n);\n\nif (!fitRow) {\n  const overallMin = Math.min(...matchingDurationRows.map(r => Number(r.min_pax)));\n  const overallMax = Math.max(...matchingDurationRows.map(r => Number(r.max_pax)));\n  return [{\n    json: {\n      error: true,\n      message: `Passengers must be between ${overallMin} and ${overallMax} for that duration.`\n    }\n  }];\n}\n\n// ── Date validation ───────────────────────────────────────────────────────\nconst dateStr = String(input.date).trim();\nconst dateFormatOk = /^\\d{4}-\\d{2}-\\d{2}$/.test(dateStr);\n\nif (!dateFormatOk) {\n  return [{ json: { error: true, message: 'Date must be in YYYY-MM-DD format.' } }];\n}\n\nconst parsedDate = DateTime.fromISO(dateStr, { zone: 'America/Costa_Rica' });\n\nif (!parsedDate.isValid) {\n  return [{ json: { error: true, message: 'Date is not a valid calendar date.' } }];\n}\n\nconst todayCR = DateTime.now().setZone('America/Costa_Rica').startOf('day');\n\nif (parsedDate.startOf('day') < todayCR) {\n  return [{ json: { error: true, message: 'That date has already passed — please choose a future date.' } }];\n}\n\n// ── Resolved values from the matched rate_table row ──────────────────────\nreturn [{\n  json: {\n    error: false,\n    tour_id: input.tour_id,\n    service_name: detail.title || `Charter ${input.tour_id}`,\n    passengers: passengers,\n    duration_label: fitRow.duration_label,\n    duration_api_value: fitRow.duration_key,\n    total_price: 5000,\n    pickup_time: fitRow.pickup_time || 'Not specified',\n    date: dateStr,\n    pickup_location: input.pickup_location,\n    email: input.email || ''\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -3984,
+          -432
+        ],
+        "id": "4a385303-da13-408a-a9a5-8831e1754a41",
+        "name": "Validate + Calculate Price (Charter)"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "00fdffa6-d1f8-4294-ae11-2017fa307c0d",
+                "leftValue": "={{ $json.error }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "false",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -3584,
+          -432
+        ],
+        "id": "6d49f120-8c81-4624-a94d-79cc42b727af",
+        "name": "If Valid input"
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { error: true, message: $json.message } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -3584,
+          -208
+        ],
+        "id": "cbfbdf48-6563-4633-8b99-fcebde962d07",
+        "name": "Return Validation Error"
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M",
+            "mode": "list",
+            "cachedResultName": "CRTT",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 792596630,
+            "mode": "list",
+            "cachedResultName": "cart",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M/edit#gid=792596630"
+          },
+          "filtersUI": {
+            "values": [
+              {
+                "lookupColumn": "email",
+                "lookupValue": "={{ $json.email }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.5,
+        "position": [
+          -3184,
+          -448
+        ],
+        "id": "1cd5f115-e7de-445c-b7ce-15b98a379c34",
+        "name": "Read Cart Row",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "xFfEyXD6mSbnGpjq",
+            "name": "Google Sheets account ROY"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const input = $('Validate + Calculate Price (Charter)').first().json;\nconst rows = $input.all();\nconst existing = rows.length > 0 ? rows[0].json : null;\n\nreturn [{\n  json: {\n    email: input.email,\n    cart_id: existing?.cart_id || ('cart_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8)),\n    cart_cookie: existing?.cart_cookie || ''\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2992,
+          -448
+        ],
+        "id": "0688e4d3-60c4-42dc-b066-0cdc66a86862",
+        "name": "Normalize Cart Row"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "00fdffa6-d1f8-4294-ae11-2017fa307c0d",
+                "leftValue": "={{ $json.cart_cookie }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -2800,
+          -448
+        ],
+        "id": "be027ac3-9e9c-4d64-839f-92087c0cfb8e",
+        "name": "Has Cart Cookie"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://dev.costaricatransfersandtours.com/wp-admin/admin-ajax.php",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Cookie",
+                "value": "={{ $json.cart_cookie }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "form-urlencoded",
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "action",
+                "value": "tb_add_tour_to_cart"
+              },
+              {
+                "name": "tour_id",
+                "value": "={{ $('Validate + Calculate Price (Charter)').item.json.tour_id }}"
+              },
+              {
+                "name": "passengers",
+                "value": "={{ $('Validate + Calculate Price (Charter)').item.json.passengers }}"
+              },
+              {
+                "name": "duration",
+                "value": "={{ $('Validate + Calculate Price (Charter)').item.json.duration_api_value }}"
+              },
+              {
+                "name": "date",
+                "value": "={{ $('Validate + Calculate Price (Charter)').item.json.date }}"
+              },
+              {
+                "name": "pickup",
+                "value": "={{ $('Validate + Calculate Price (Charter)').item.json.pickup_location }}"
+              },
+              {
+                "name": "pickup_time",
+                "value": "={{ $('Validate + Calculate Price (Charter)').item.json.pickup_time }}"
+              },
+              {
+                "name": "total",
+                "value": "={{ $('Validate + Calculate Price (Charter)').item.json.total_price }}"
+              }
+            ]
+          },
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -2400,
+          -560
+        ],
+        "id": "ff3925d9-9a04-4951-88e2-9f1221c454f6",
+        "name": "Add Charter to same cart"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://dev.costaricatransfersandtours.com/wp-admin/admin-ajax.php",
+          "sendBody": true,
+          "contentType": "form-urlencoded",
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "action",
+                "value": "tb_add_tour_to_cart"
+              },
+              {
+                "name": "tour_id",
+                "value": "={{ $('Validate + Calculate Price (Charter)').item.json.tour_id }}"
+              },
+              {
+                "name": "passengers",
+                "value": "={{ $('Validate + Calculate Price (Charter)').item.json.passengers }}"
+              },
+              {
+                "name": "duration",
+                "value": "={{ $('Validate + Calculate Price (Charter)').item.json.duration_api_value }}"
+              },
+              {
+                "name": "date",
+                "value": "={{ $('Validate + Calculate Price (Charter)').item.json.date }}"
+              },
+              {
+                "name": "pickup",
+                "value": "={{ $('Validate + Calculate Price (Charter)').item.json.pickup_location }}"
+              },
+              {
+                "name": "pickup_time",
+                "value": "={{ $('Validate + Calculate Price (Charter)').item.json.pickup_time }}"
+              },
+              {
+                "name": "total",
+                "value": "={{ $('Validate + Calculate Price (Charter)').item.json.total_price }}"
+              }
+            ]
+          },
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -2400,
+          -336
+        ],
+        "id": "29e1604b-c3f6-40c3-9f16-643858ec837a",
+        "name": "Add charter to cart"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "00fdffa6-d1f8-4294-ae11-2017fa307c0d",
+                "leftValue": "={{ $json.body.success }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -1968,
+          -432
+        ],
+        "id": "67559e2b-8ac2-49e5-bc13-26ceb9e97b94",
+        "name": "If Add To Cart Fails"
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { error: true, message: $input.first().json.body?.data?.message || 'Failed to add charter to cart.' } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1968,
+          -192
+        ],
+        "id": "366d5fde-44c0-4904-806a-26abee653eb4",
+        "name": "Return Add to Cart Errors"
+      },
+      {
+        "parameters": {
+          "jsCode": "const resp = $input.first().json;\nconst normalized = $('Normalize Cart Row').first().json;\n\nconst setCookie = resp.headers?.['set-cookie'] || [];\nconst freshCookie = setCookie.join('; ');\nconst hasSessionToken = /wp_woocommerce_session_/.test(freshCookie);\n\nreturn [{\n  json: {\n    email: normalized.email,\n    cart_id: normalized.cart_id,\n    cart_cookie: hasSessionToken ? freshCookie : normalized.cart_cookie\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1520,
+          -448
+        ],
+        "id": "61245cea-497c-46b6-9453-947f33d695a7",
+        "name": "Resolve Cart Cookie"
+      },
+      {
+        "parameters": {
+          "operation": "appendOrUpdate",
+          "documentId": {
+            "__rl": true,
+            "value": "1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M",
+            "mode": "list",
+            "cachedResultName": "CRTT",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 792596630,
+            "mode": "list",
+            "cachedResultName": "cart",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M/edit#gid=792596630"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "cart_id": "={{ $json.cart_id }}",
+              "email": "={{ $json.email }}",
+              "cart_cookie": "={{ $json.cart_cookie }}",
+              "cart_updated_at": "={{ $now }}"
+            },
+            "matchingColumns": [
+              "email"
+            ],
+            "schema": [
+              {
+                "id": "cart_id",
+                "displayName": "cart_id",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "email",
+                "displayName": "email",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "cart_cookie",
+                "displayName": "cart_cookie",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "cart_updated_at",
+                "displayName": "cart_updated_at",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.5,
+        "position": [
+          -1328,
+          -448
+        ],
+        "id": "a72fd9d9-0f9a-41dd-8193-da68c93b7f52",
+        "name": "Save Cart Cookie",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "xFfEyXD6mSbnGpjq",
+            "name": "Google Sheets account ROY"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// Clean confirmation payload for NEO — the actual cart item info,\n// not the raw Google Sheets row this node runs after.\n\nconst item = $('Validate + Calculate Price (Charter)').first().json;\n\nreturn [{\n  json: {\n    error: false,\n    message: 'Boat charter added to cart successfully.',\n    service_name: item.service_name,\n    tour_id: item.tour_id,\n    passengers: item.passengers,\n    duration_label: item.duration_label,\n    date: item.date,\n    pickup_location: item.pickup_location,\n    pickup_time: item.pickup_time,\n    total_price: item.total_price\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1136,
+          -448
+        ],
+        "id": "04fb338d-facb-4ba1-a321-f6983a859a43",
+        "name": "Return Success"
+      }
+    ],
+    "connections": {
+      "When Called by Agent": {
+        "main": [
+          [
+            {
+              "node": "Fetch Charter Detail",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Charter Detail": {
+        "main": [
+          [
+            {
+              "node": "Validate + Calculate Price (Charter)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Validate + Calculate Price (Charter)": {
+        "main": [
+          [
+            {
+              "node": "If Valid input",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Valid input": {
+        "main": [
+          [
+            {
+              "node": "Read Cart Row",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Return Validation Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Read Cart Row": {
+        "main": [
+          [
+            {
+              "node": "Normalize Cart Row",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Normalize Cart Row": {
+        "main": [
+          [
+            {
+              "node": "Has Cart Cookie",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Has Cart Cookie": {
+        "main": [
+          [
+            {
+              "node": "Add Charter to same cart",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Add charter to cart",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Add Charter to same cart": {
+        "main": [
+          [
+            {
+              "node": "If Add To Cart Fails",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Add charter to cart": {
+        "main": [
+          [
+            {
+              "node": "If Add To Cart Fails",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Add To Cart Fails": {
+        "main": [
+          [
+            {
+              "node": "Resolve Cart Cookie",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Return Add to Cart Errors",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Resolve Cart Cookie": {
+        "main": [
+          [
+            {
+              "node": "Save Cart Cookie",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Save Cart Cookie": {
+        "main": [
+          [
+            {
+              "node": "Return Success",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Rashid  Mustafa",
+    "name": "Version 2a04e111",
+    "description": "",
+    "autosaved": true,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-08-10T11:11:50.193Z",
+        "id": 240,
+        "workflowId": "qkkI8nmxhbe07bC4",
+        "versionId": "2a04e111-9914-428d-88f0-cb55b00998c3",
+        "event": "activated",
+        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
+      }
+    ]
+  }
+}
