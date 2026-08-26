@@ -38,6 +38,11 @@ async function pushWorkflows() {
       return;
     }
 
+    const targetId = process.argv[2];
+    if (targetId) {
+      console.log(`Targeting single workflow ID: ${targetId}`);
+    }
+
     console.log(`Pushing workflows to remote n8n instance at: ${baseUrl}`);
 
     for (const filename of files) {
@@ -52,6 +57,10 @@ async function pushWorkflows() {
         continue;
       }
 
+      if (targetId && workflow.id !== targetId) {
+        continue;
+      }
+
       const workflowName = workflow.name || 'Untitled Workflow';
       let remoteWorkflow = null;
       let isNew = !workflow.id;
@@ -60,7 +69,15 @@ async function pushWorkflows() {
         try {
           console.log(`Updating workflow: "${workflowName}" (ID: ${workflow.id})...`);
           const url = `${baseUrl}/workflows/${workflow.id}`;
-          const response = await axios.put(url, workflow, {
+          
+          // Remove read-only properties to prevent "additional properties" error from n8n API
+          const { id, createdAt, updatedAt, activeVersion, activeVersionId, versionCounter, triggerCount, sourceWorkflowId, shared, authors, autosaved, workflowPublishHistory, meta, pinData, nodeGroups, ...updatePayload } = workflow;
+
+          if (updatePayload.description === null) {
+            updatePayload.description = "";
+          }
+
+          const response = await axios.put(url, updatePayload, {
             headers: {
               'X-N8N-API-KEY': API_KEY,
               'Content-Type': 'application/json',
@@ -87,6 +104,10 @@ async function pushWorkflows() {
           
           // Remove ID or other read-only properties if existing
           const { id, createdAt, updatedAt, ...createPayload } = workflow;
+
+          if (createPayload.description === null) {
+            createPayload.description = "";
+          }
 
           const response = await axios.post(url, createPayload, {
             headers: {
