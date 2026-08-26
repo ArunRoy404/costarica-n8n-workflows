@@ -70,12 +70,15 @@ async function pushWorkflows() {
           console.log(`Updating workflow: "${workflowName}" (ID: ${workflow.id})...`);
           const url = `${baseUrl}/workflows/${workflow.id}`;
           
-          // Remove read-only properties to prevent "additional properties" error from n8n API
-          const { id, createdAt, updatedAt, activeVersion, activeVersionId, versionCounter, triggerCount, sourceWorkflowId, shared, authors, autosaved, workflowPublishHistory, meta, pinData, nodeGroups, ...updatePayload } = workflow;
-
-          if (updatePayload.description === null) {
-            updatePayload.description = "";
-          }
+          // Use a strict whitelist of fields to avoid "read-only" or "additional properties" errors
+          const updatePayload = {
+            name: workflow.name,
+            nodes: workflow.nodes,
+            connections: workflow.connections,
+            settings: workflow.settings,
+            staticData: workflow.staticData,
+            description: workflow.description || ""
+          };
 
           const response = await axios.put(url, updatePayload, {
             headers: {
@@ -102,12 +105,15 @@ async function pushWorkflows() {
           console.log(`Creating new workflow: "${workflowName}"...`);
           const url = `${baseUrl}/workflows`;
           
-          // Remove ID or other read-only properties if existing
-          const { id, createdAt, updatedAt, ...createPayload } = workflow;
-
-          if (createPayload.description === null) {
-            createPayload.description = "";
-          }
+          // Use a strict whitelist for creating workflows too
+          const createPayload = {
+            name: workflow.name,
+            nodes: workflow.nodes,
+            connections: workflow.connections,
+            settings: workflow.settings,
+            staticData: workflow.staticData,
+            description: workflow.description || ""
+          };
 
           const response = await axios.post(url, createPayload, {
             headers: {

@@ -1,9 +1,9 @@
 {
-  "updatedAt": "2026-08-06T09:29:23.530Z",
+  "updatedAt": "2026-08-26T10:23:56.048Z",
   "createdAt": "2026-08-06T06:15:06.576Z",
   "id": "nCuSVzLVgng6anR4",
   "name": "CRTT - Sync Paid Orders to Google Calendar",
-  "description": null,
+  "description": "",
   "active": true,
   "isArchived": false,
   "nodes": [
@@ -309,36 +309,16 @@
   },
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "8cb72e9a-70b3-4386-967f-5824b3dbaa28",
-  "activeVersionId": "8cb72e9a-70b3-4386-967f-5824b3dbaa28",
-  "versionCounter": 36,
+  "versionId": "ce92eba9-1f4f-41dc-b234-75bdd691fae2",
+  "activeVersionId": "ce92eba9-1f4f-41dc-b234-75bdd691fae2",
+  "versionCounter": 37,
   "triggerCount": 1,
   "sourceWorkflowId": null,
-  "shared": [
-    {
-      "updatedAt": "2026-08-06T06:15:06.579Z",
-      "createdAt": "2026-08-06T06:15:06.579Z",
-      "role": "workflow:owner",
-      "workflowId": "nCuSVzLVgng6anR4",
-      "projectId": "YKlYEXVQgHIwARXX",
-      "project": {
-        "updatedAt": "2026-06-03T11:53:20.889Z",
-        "createdAt": "2026-06-03T11:18:36.474Z",
-        "id": "YKlYEXVQgHIwARXX",
-        "name": "Rashid  Mustafa <info@costaricatransfersandtours.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null,
-        "customTelemetryTags": [],
-        "creatorId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    }
-  ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-08-06T09:29:27.000Z",
-    "createdAt": "2026-08-06T09:29:23.531Z",
-    "versionId": "8cb72e9a-70b3-4386-967f-5824b3dbaa28",
+    "updatedAt": "2026-08-26T10:23:34.434Z",
+    "createdAt": "2026-08-26T10:23:34.434Z",
+    "versionId": "ce92eba9-1f4f-41dc-b234-75bdd691fae2",
     "workflowId": "nCuSVzLVgng6anR4",
     "nodes": [
       {
@@ -626,18 +606,8 @@
     },
     "nodeGroups": [],
     "authors": "Rashid  Mustafa",
-    "name": "Version 8cb72e9a",
-    "description": "",
-    "autosaved": true,
-    "workflowPublishHistory": [
-      {
-        "createdAt": "2026-08-06T09:29:27.433Z",
-        "id": 201,
-        "workflowId": "nCuSVzLVgng6anR4",
-        "versionId": "8cb72e9a-70b3-4386-967f-5824b3dbaa28",
-        "event": "activated",
-        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    ]
+    "name": null,
+    "description": null,
+    "autosaved": false
   }
 }
