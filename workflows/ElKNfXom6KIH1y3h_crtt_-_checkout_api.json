@@ -1,9 +1,9 @@
 {
-  "updatedAt": "2026-08-05T09:06:29.208Z",
+  "updatedAt": "2026-08-26T10:51:58.651Z",
   "createdAt": "2026-07-30T05:24:40.294Z",
   "id": "ElKNfXom6KIH1y3h",
   "name": "CRTT - Checkout API",
-  "description": null,
+  "description": "",
   "active": true,
   "isArchived": false,
   "nodes": [
@@ -252,7 +252,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const d = $json;\nconst required = ['first_name','last_name','address_1','city','state','postcode','country','email','phone'];\nconst missing = required.filter(f => !d[f] || String(d[f]).trim() === '');\n\nconst emailOk = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(d.email || '');\nconst countryOk = /^[A-Z]{2}$/.test((d.country || '').trim());\n\nif (missing.length > 0) {\n  return [{ json: { error: true, message: `Missing required billing info: ${missing.join(', ')}.` } }];\n}\n\nif (!emailOk) {\n  return [{ json: { error: true, message: 'The email address provided is not valid.' } }];\n}\n\nif (!countryOk) {\n  return [{ json: { error: true, message: 'Country must be a valid 2-letter country code (e.g. US, CR, GB).' } }];\n}\n\nreturn [{ json: { ...d, error: false } }];"
+        "jsCode": "const d = $json;\nconst required = ['first_name','last_name','address_1','city','state','postcode','country','email','phone'];\nconst missing = required.filter(f => !d[f] || String(d[f]).trim() === '');\n\nconst emailOk = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(d.email || '');\nconst countryOk = /^[A-Z]{2}$/.test((d.country || '').trim().toUpperCase());\n\nif (missing.length > 0) {\n  return [{ json: { error: true, message: `Missing required billing info: ${missing.join(', ')}.` } }];\n}\n\nif (!emailOk) {\n  return [{ json: { error: true, message: 'The email address provided is not valid.' } }];\n}\n\nif (!countryOk) {\n  return [{ json: { error: true, message: 'Country must be a valid 2-letter country code (e.g. US, CR, GB).' } }];\n}\n\nreturn [{ json: { ...d, error: false } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -440,11 +440,15 @@
         -1616
       ],
       "id": "87a5dffc-1054-42e2-ba04-d4652d01840b",
-      "name": "Submit Checkout"
+      "name": "Submit Checkout",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "continueOnFail": true
     },
     {
       "parameters": {
-        "jsCode": "const resp = $input.first().json;\nconst prior = $('Resolve State Code').first().json;\nconst body = resp.body;\nconst statusOk = resp.statusCode >= 200 && resp.statusCode < 300;\n\nfunction extractErrorMessage(b) {\n  if (!b) return 'Checkout failed for an unknown reason.';\n  if (b.data?.errors?.billing) return 'Billing address issue: ' + b.data.errors.billing.join(', ');\n  if (b.data?.details) {\n    const messages = Object.values(b.data.details).map(d => d.message).filter(Boolean);\n    if (messages.length) return messages.join(', ');\n  }\n  if (b.message) return b.message;\n  return 'Checkout failed for an unknown reason.';\n}\n\nconst redirectUrl = body?.payment_result?.redirect_url;\n\nif (!statusOk || !redirectUrl) {\n  return [{ json: { error: true, message: extractErrorMessage(body) } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    order_id: body.order_id,\n    order_number: body.order_number,\n    order_key: body.order_key,\n    payment_status: body.payment_result?.payment_status,\n    redirect_url: redirectUrl,\n    email: prior.email\n  }\n}];"
+        "jsCode": "const resp = $input.first().json;\nconst prior = $('Resolve State Code').first().json;\n\nif (resp.error) {\n  return [{ json: { error: true, message: resp.error.message || 'Checkout request failed.' } }];\n}\n\nconst body = resp.body;\nconst statusOk = resp.statusCode >= 200 && resp.statusCode < 300;\n\nfunction extractErrorMessage(b) {\n  if (!b) return 'Checkout failed for an unknown reason.';\n  if (b.data?.errors?.billing) return 'Billing address issue: ' + b.data.errors.billing.join(', ');\n  if (b.data?.details) {\n    const messages = Object.values(b.data.details).map(d => d.message).filter(Boolean);\n    if (messages.length) return messages.join(', ');\n  }\n  if (b.message) return b.message;\n  return 'Checkout failed for an unknown reason.';\n}\n\nconst redirectUrl = body?.payment_result?.redirect_url;\n\nif (!statusOk || !redirectUrl) {\n  return [{ json: { error: true, message: extractErrorMessage(body) } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    order_id: body.order_id,\n    order_number: body.order_number,\n    order_key: body.order_key,\n    payment_status: body.payment_result?.payment_status,\n    redirect_url: redirectUrl,\n    email: prior.email\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -491,16 +495,51 @@
     },
     {
       "parameters": {
-        "jsCode": "return [{ json: { error: false, message: 'Checkout created successfully. Redirect the user to PayPal to complete payment.', order_id: $json.order_id, order_number: $json.order_number, redirect_url: $json.redirect_url } }];"
+        "jsCode": "const prior = $('Check Checkout Result').first().json;\nreturn [{ json: { error: false, message: 'Checkout created successfully. Redirect the user to PayPal to complete payment.', order_id: prior.order_id, order_number: prior.order_number, redirect_url: prior.redirect_url } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2352,
+        -2128,
         -1712
       ],
       "id": "014a24f6-29e1-4f1d-ad57-c68fcc45f172",
       "name": "Return Checkout Success"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "value": "1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M",
+          "mode": "list",
+          "cachedResultName": "CRTT",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 792596630,
+          "mode": "list",
+          "cachedResultName": "cart",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M/edit#gid=792596630"
+        },
+        "rowNumber": "={{ $('Read Cart Row').first().json.row_number }}"
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -2352,
+        -1712
+      ],
+      "id": "clear-cart-row-id-1",
+      "name": "Clear Cart Row",
+      "continueOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xFfEyXD6mSbnGpjq",
+          "name": "Google Sheets account ROY"
+        }
+      }
     },
     {
       "parameters": {
@@ -703,7 +742,7 @@
       "main": [
         [
           {
-            "node": "Return Checkout Success",
+            "node": "Clear Cart Row",
             "type": "main",
             "index": 0
           }
@@ -711,6 +750,17 @@
         [
           {
             "node": "Return Checkout Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clear Cart Row": {
+      "main": [
+        [
+          {
+            "node": "Return Checkout Success",
             "type": "main",
             "index": 0
           }
@@ -726,36 +776,16 @@
   "meta": null,
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "d2ba9edc-de86-4965-8986-f601998a521f",
-  "activeVersionId": "d2ba9edc-de86-4965-8986-f601998a521f",
-  "versionCounter": 34,
+  "versionId": "5079f995-86e6-4e02-b8ce-074c5a1db2bd",
+  "activeVersionId": "5079f995-86e6-4e02-b8ce-074c5a1db2bd",
+  "versionCounter": 36,
   "triggerCount": 0,
   "sourceWorkflowId": null,
-  "shared": [
-    {
-      "updatedAt": "2026-07-30T05:24:40.297Z",
-      "createdAt": "2026-07-30T05:24:40.297Z",
-      "role": "workflow:owner",
-      "workflowId": "ElKNfXom6KIH1y3h",
-      "projectId": "YKlYEXVQgHIwARXX",
-      "project": {
-        "updatedAt": "2026-06-03T11:53:20.889Z",
-        "createdAt": "2026-06-03T11:18:36.474Z",
-        "id": "YKlYEXVQgHIwARXX",
-        "name": "Rashid  Mustafa <info@costaricatransfersandtours.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null,
-        "customTelemetryTags": [],
-        "creatorId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    }
-  ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-08-05T09:07:08.000Z",
-    "createdAt": "2026-08-05T09:06:29.209Z",
-    "versionId": "d2ba9edc-de86-4965-8986-f601998a521f",
+    "updatedAt": "2026-08-26T10:51:58.652Z",
+    "createdAt": "2026-08-26T10:51:58.652Z",
+    "versionId": "5079f995-86e6-4e02-b8ce-074c5a1db2bd",
     "workflowId": "ElKNfXom6KIH1y3h",
     "nodes": [
       {
@@ -1003,7 +1033,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const d = $json;\nconst required = ['first_name','last_name','address_1','city','state','postcode','country','email','phone'];\nconst missing = required.filter(f => !d[f] || String(d[f]).trim() === '');\n\nconst emailOk = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(d.email || '');\nconst countryOk = /^[A-Z]{2}$/.test((d.country || '').trim());\n\nif (missing.length > 0) {\n  return [{ json: { error: true, message: `Missing required billing info: ${missing.join(', ')}.` } }];\n}\n\nif (!emailOk) {\n  return [{ json: { error: true, message: 'The email address provided is not valid.' } }];\n}\n\nif (!countryOk) {\n  return [{ json: { error: true, message: 'Country must be a valid 2-letter country code (e.g. US, CR, GB).' } }];\n}\n\nreturn [{ json: { ...d, error: false } }];"
+          "jsCode": "const d = $json;\nconst required = ['first_name','last_name','address_1','city','state','postcode','country','email','phone'];\nconst missing = required.filter(f => !d[f] || String(d[f]).trim() === '');\n\nconst emailOk = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(d.email || '');\nconst countryOk = /^[A-Z]{2}$/.test((d.country || '').trim().toUpperCase());\n\nif (missing.length > 0) {\n  return [{ json: { error: true, message: `Missing required billing info: ${missing.join(', ')}.` } }];\n}\n\nif (!emailOk) {\n  return [{ json: { error: true, message: 'The email address provided is not valid.' } }];\n}\n\nif (!countryOk) {\n  return [{ json: { error: true, message: 'Country must be a valid 2-letter country code (e.g. US, CR, GB).' } }];\n}\n\nreturn [{ json: { ...d, error: false } }];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -1191,11 +1221,15 @@
           -1616
         ],
         "id": "87a5dffc-1054-42e2-ba04-d4652d01840b",
-        "name": "Submit Checkout"
+        "name": "Submit Checkout",
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 2000,
+        "continueOnFail": true
       },
       {
         "parameters": {
-          "jsCode": "const resp = $input.first().json;\nconst prior = $('Resolve State Code').first().json;\nconst body = resp.body;\nconst statusOk = resp.statusCode >= 200 && resp.statusCode < 300;\n\nfunction extractErrorMessage(b) {\n  if (!b) return 'Checkout failed for an unknown reason.';\n  if (b.data?.errors?.billing) return 'Billing address issue: ' + b.data.errors.billing.join(', ');\n  if (b.data?.details) {\n    const messages = Object.values(b.data.details).map(d => d.message).filter(Boolean);\n    if (messages.length) return messages.join(', ');\n  }\n  if (b.message) return b.message;\n  return 'Checkout failed for an unknown reason.';\n}\n\nconst redirectUrl = body?.payment_result?.redirect_url;\n\nif (!statusOk || !redirectUrl) {\n  return [{ json: { error: true, message: extractErrorMessage(body) } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    order_id: body.order_id,\n    order_number: body.order_number,\n    order_key: body.order_key,\n    payment_status: body.payment_result?.payment_status,\n    redirect_url: redirectUrl,\n    email: prior.email\n  }\n}];"
+          "jsCode": "const resp = $input.first().json;\nconst prior = $('Resolve State Code').first().json;\n\nif (resp.error) {\n  return [{ json: { error: true, message: resp.error.message || 'Checkout request failed.' } }];\n}\n\nconst body = resp.body;\nconst statusOk = resp.statusCode >= 200 && resp.statusCode < 300;\n\nfunction extractErrorMessage(b) {\n  if (!b) return 'Checkout failed for an unknown reason.';\n  if (b.data?.errors?.billing) return 'Billing address issue: ' + b.data.errors.billing.join(', ');\n  if (b.data?.details) {\n    const messages = Object.values(b.data.details).map(d => d.message).filter(Boolean);\n    if (messages.length) return messages.join(', ');\n  }\n  if (b.message) return b.message;\n  return 'Checkout failed for an unknown reason.';\n}\n\nconst redirectUrl = body?.payment_result?.redirect_url;\n\nif (!statusOk || !redirectUrl) {\n  return [{ json: { error: true, message: extractErrorMessage(body) } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    order_id: body.order_id,\n    order_number: body.order_number,\n    order_key: body.order_key,\n    payment_status: body.payment_result?.payment_status,\n    redirect_url: redirectUrl,\n    email: prior.email\n  }\n}];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -1242,16 +1276,51 @@
       },
       {
         "parameters": {
-          "jsCode": "return [{ json: { error: false, message: 'Checkout created successfully. Redirect the user to PayPal to complete payment.', order_id: $json.order_id, order_number: $json.order_number, redirect_url: $json.redirect_url } }];"
+          "jsCode": "const prior = $('Check Checkout Result').first().json;\nreturn [{ json: { error: false, message: 'Checkout created successfully. Redirect the user to PayPal to complete payment.', order_id: prior.order_id, order_number: prior.order_number, redirect_url: prior.redirect_url } }];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -2352,
+          -2128,
           -1712
         ],
         "id": "014a24f6-29e1-4f1d-ad57-c68fcc45f172",
         "name": "Return Checkout Success"
+      },
+      {
+        "parameters": {
+          "operation": "delete",
+          "documentId": {
+            "__rl": true,
+            "value": "1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M",
+            "mode": "list",
+            "cachedResultName": "CRTT",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 792596630,
+            "mode": "list",
+            "cachedResultName": "cart",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M/edit#gid=792596630"
+          },
+          "rowNumber": "={{ $('Read Cart Row').first().json.row_number }}"
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.5,
+        "position": [
+          -2352,
+          -1712
+        ],
+        "id": "clear-cart-row-id-1",
+        "name": "Clear Cart Row",
+        "continueOnFail": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "xFfEyXD6mSbnGpjq",
+            "name": "Google Sheets account ROY"
+          }
+        }
       },
       {
         "parameters": {
@@ -1454,7 +1523,7 @@
         "main": [
           [
             {
-              "node": "Return Checkout Success",
+              "node": "Clear Cart Row",
               "type": "main",
               "index": 0
             }
@@ -1467,22 +1536,23 @@
             }
           ]
         ]
+      },
+      "Clear Cart Row": {
+        "main": [
+          [
+            {
+              "node": "Return Checkout Success",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "nodeGroups": [],
     "authors": "Rashid  Mustafa",
-    "name": "Version d2ba9edc",
-    "description": "",
-    "autosaved": true,
-    "workflowPublishHistory": [
-      {
-        "createdAt": "2026-08-05T09:07:08.836Z",
-        "id": 180,
-        "workflowId": "ElKNfXom6KIH1y3h",
-        "versionId": "d2ba9edc-de86-4965-8986-f601998a521f",
-        "event": "activated",
-        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    ]
+    "name": null,
+    "description": null,
+    "autosaved": false
   }
 }
