@@ -1,9 +1,9 @@
 {
-  "updatedAt": "2026-08-05T09:26:26.579Z",
+  "updatedAt": "2026-08-27T03:07:53.770Z",
   "createdAt": "2026-07-29T10:22:30.259Z",
   "id": "R4DoiRxM7WE6CWS6",
   "name": "CRTT - Update Cart Item Passengers API",
-  "description": null,
+  "description": "",
   "active": true,
   "isArchived": false,
   "nodes": [
@@ -76,7 +76,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const input = $('When Called by Agent').first().json;\nconst rows = $input.all();\nconst existing = rows.length > 0 ? rows[0].json : null;\n\nif (!existing || !existing.cart_cookie) {\n  return [{ json: { error: true, message: 'No active cart was found for this email, so there is nothing to update.' } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    email: input.email,\n    item_key: input.item_key,\n    passenger_count: input.passenger_count,\n    cart_id: existing.cart_id,\n    cart_cookie: existing.cart_cookie\n  }\n}];"
+        "jsCode": "const input = $('When Called by Agent').first().json;\nconst rows = $input.all();\nconst existing = rows.length > 0 ? rows[0].json : null;\n\nconst passCount = parseInt(input.passenger_count, 10);\nif (isNaN(passCount) || passCount <= 0) {\n  return [{ json: { error: true, message: 'passenger_count must be a valid positive number.' } }];\n}\n\nif (!existing || !existing.cart_cookie) {\n  return [{ json: { error: true, message: 'No active cart was found for this email, so there is nothing to update.' } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    email: input.email,\n    item_key: input.item_key,\n    passenger_count: passCount,\n    cart_id: existing.cart_id,\n    cart_cookie: existing.cart_cookie\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -123,19 +123,6 @@
     },
     {
       "parameters": {
-        "jsCode": "return [{ json: { error: true, message: $json.message } }];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -2560,
-        320
-      ],
-      "id": "79fbca57-b9ce-41d6-a146-993843afca4a",
-      "name": "Return No Cart Error"
-    },
-    {
-      "parameters": {
         "url": "https://dev.costaricatransfersandtours.com/wp-json/wc/store/v1/cart",
         "sendHeaders": true,
         "headerParameters": {
@@ -161,7 +148,11 @@
         80
       ],
       "id": "78b6a14d-8cb3-475d-8aa0-f73837184cea",
-      "name": "Get Fresh Cart"
+      "name": "Get Fresh Cart",
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
     },
     {
       "parameters": {
@@ -209,19 +200,6 @@
       ],
       "id": "90931573-bff5-43e4-aa7d-ec82972df4fb",
       "name": "If Token Found"
-    },
-    {
-      "parameters": {
-        "jsCode": "return [{ json: { error: true, message: $json.message } }];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -1488,
-        304
-      ],
-      "id": "7aa28a3e-74c5-4fe4-a46a-2c771538f743",
-      "name": "Return No Session Error"
     },
     {
       "parameters": {
@@ -273,11 +251,15 @@
         64
       ],
       "id": "232d0aca-b2d4-4812-ad5b-684f7bf20b37",
-      "name": "Update Item via Store API"
+      "name": "Update Item via Store API",
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
     },
     {
       "parameters": {
-        "jsCode": "const resp = $input.first().json;\nconst prior = $('Extract Cart Token').first().json;\nconst body = resp.body;\nconst statusOk = resp.statusCode >= 200 && resp.statusCode < 300;\nconst apiSuccess = body?.success === true;\nconst returnedPassengers = body?.data?.passengers;\nconst countMatches = Number(returnedPassengers) === Number(prior.passenger_count);\n\nif (!statusOk || !apiSuccess || !countMatches) {\n  return [{ json: { error: true, message: 'Failed to update the passenger count for this item.' } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    email: prior.email,\n    item_key: prior.item_key,\n    new_passenger_count: returnedPassengers\n  }\n}];"
+        "jsCode": "const resp = $input.first().json;\nconst prior = $('Extract Cart Token').first().json;\nconst body = resp.body || resp;\nconst statusOk = resp.statusCode >= 200 && resp.statusCode < 300;\nconst apiSuccess = body?.success === true;\nconst returnedPassengers = body?.data?.passengers;\nconst countMatches = Number(returnedPassengers) === Number(prior.passenger_count);\n\nif (!statusOk || !apiSuccess || !countMatches) {\n  return [{ json: { error: true, message: 'Failed to update the passenger count for this item.' } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    message: 'Passenger count updated successfully.',\n    email: prior.email,\n    item_key: prior.item_key,\n    new_passenger_count: returnedPassengers\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -287,66 +269,6 @@
       ],
       "id": "255ab033-4cb0-415d-9bcb-428414182c16",
       "name": "Check Update Result"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "u-cond3",
-              "leftValue": "={{ $json.error }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "false",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        -368,
-        64
-      ],
-      "id": "1f7638f9-2e48-46ab-9c77-a976f6e42fc6",
-      "name": "If Updated Successfully"
-    },
-    {
-      "parameters": {
-        "jsCode": "return [{ json: { error: false, message: 'Passenger count updated successfully.', new_passenger_count: $json.new_passenger_count } }];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -144,
-        -32
-      ],
-      "id": "a635f8af-be40-437a-bd9e-76d6c589242f",
-      "name": "Return Update Success"
-    },
-    {
-      "parameters": {
-        "jsCode": "return [{ json: { error: true, message: $json.message } }];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -144,
-        160
-      ],
-      "id": "a4a22afa-9c8f-48aa-9340-5741dd01a9b1",
-      "name": "Return Update Failure"
     }
   ],
   "connections": {
@@ -392,13 +314,7 @@
             "index": 0
           }
         ],
-        [
-          {
-            "node": "Return No Cart Error",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Get Fresh Cart": {
@@ -432,13 +348,7 @@
             "index": 0
           }
         ],
-        [
-          {
-            "node": "Return No Session Error",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Update Item via Store API": {
@@ -454,31 +364,7 @@
     },
     "Check Update Result": {
       "main": [
-        [
-          {
-            "node": "If Updated Successfully",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "If Updated Successfully": {
-      "main": [
-        [
-          {
-            "node": "Return Update Success",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Return Update Failure",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     }
   },
@@ -490,36 +376,16 @@
   "meta": null,
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "d943bd51-7f31-4980-9061-d634e5643110",
-  "activeVersionId": "d943bd51-7f31-4980-9061-d634e5643110",
-  "versionCounter": 12,
+  "versionId": "2856c5df-47cc-40b3-941e-c0b3ada89169",
+  "activeVersionId": "2856c5df-47cc-40b3-941e-c0b3ada89169",
+  "versionCounter": 13,
   "triggerCount": 0,
   "sourceWorkflowId": null,
-  "shared": [
-    {
-      "updatedAt": "2026-07-29T10:22:30.263Z",
-      "createdAt": "2026-07-29T10:22:30.263Z",
-      "role": "workflow:owner",
-      "workflowId": "R4DoiRxM7WE6CWS6",
-      "projectId": "YKlYEXVQgHIwARXX",
-      "project": {
-        "updatedAt": "2026-06-03T11:53:20.889Z",
-        "createdAt": "2026-06-03T11:18:36.474Z",
-        "id": "YKlYEXVQgHIwARXX",
-        "name": "Rashid  Mustafa <info@costaricatransfersandtours.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null,
-        "customTelemetryTags": [],
-        "creatorId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    }
-  ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-08-05T09:26:45.000Z",
-    "createdAt": "2026-08-05T09:26:26.580Z",
-    "versionId": "d943bd51-7f31-4980-9061-d634e5643110",
+    "updatedAt": "2026-08-27T03:07:53.770Z",
+    "createdAt": "2026-08-27T03:07:53.770Z",
+    "versionId": "2856c5df-47cc-40b3-941e-c0b3ada89169",
     "workflowId": "R4DoiRxM7WE6CWS6",
     "nodes": [
       {
@@ -591,7 +457,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const input = $('When Called by Agent').first().json;\nconst rows = $input.all();\nconst existing = rows.length > 0 ? rows[0].json : null;\n\nif (!existing || !existing.cart_cookie) {\n  return [{ json: { error: true, message: 'No active cart was found for this email, so there is nothing to update.' } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    email: input.email,\n    item_key: input.item_key,\n    passenger_count: input.passenger_count,\n    cart_id: existing.cart_id,\n    cart_cookie: existing.cart_cookie\n  }\n}];"
+          "jsCode": "const input = $('When Called by Agent').first().json;\nconst rows = $input.all();\nconst existing = rows.length > 0 ? rows[0].json : null;\n\nconst passCount = parseInt(input.passenger_count, 10);\nif (isNaN(passCount) || passCount <= 0) {\n  return [{ json: { error: true, message: 'passenger_count must be a valid positive number.' } }];\n}\n\nif (!existing || !existing.cart_cookie) {\n  return [{ json: { error: true, message: 'No active cart was found for this email, so there is nothing to update.' } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    email: input.email,\n    item_key: input.item_key,\n    passenger_count: passCount,\n    cart_id: existing.cart_id,\n    cart_cookie: existing.cart_cookie\n  }\n}];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -638,19 +504,6 @@
       },
       {
         "parameters": {
-          "jsCode": "return [{ json: { error: true, message: $json.message } }];"
-        },
-        "type": "n8n-nodes-base.code",
-        "typeVersion": 2,
-        "position": [
-          -2560,
-          320
-        ],
-        "id": "79fbca57-b9ce-41d6-a146-993843afca4a",
-        "name": "Return No Cart Error"
-      },
-      {
-        "parameters": {
           "url": "https://dev.costaricatransfersandtours.com/wp-json/wc/store/v1/cart",
           "sendHeaders": true,
           "headerParameters": {
@@ -676,7 +529,11 @@
           80
         ],
         "id": "78b6a14d-8cb3-475d-8aa0-f73837184cea",
-        "name": "Get Fresh Cart"
+        "name": "Get Fresh Cart",
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 2000
       },
       {
         "parameters": {
@@ -724,19 +581,6 @@
         ],
         "id": "90931573-bff5-43e4-aa7d-ec82972df4fb",
         "name": "If Token Found"
-      },
-      {
-        "parameters": {
-          "jsCode": "return [{ json: { error: true, message: $json.message } }];"
-        },
-        "type": "n8n-nodes-base.code",
-        "typeVersion": 2,
-        "position": [
-          -1488,
-          304
-        ],
-        "id": "7aa28a3e-74c5-4fe4-a46a-2c771538f743",
-        "name": "Return No Session Error"
       },
       {
         "parameters": {
@@ -788,11 +632,15 @@
           64
         ],
         "id": "232d0aca-b2d4-4812-ad5b-684f7bf20b37",
-        "name": "Update Item via Store API"
+        "name": "Update Item via Store API",
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 2000
       },
       {
         "parameters": {
-          "jsCode": "const resp = $input.first().json;\nconst prior = $('Extract Cart Token').first().json;\nconst body = resp.body;\nconst statusOk = resp.statusCode >= 200 && resp.statusCode < 300;\nconst apiSuccess = body?.success === true;\nconst returnedPassengers = body?.data?.passengers;\nconst countMatches = Number(returnedPassengers) === Number(prior.passenger_count);\n\nif (!statusOk || !apiSuccess || !countMatches) {\n  return [{ json: { error: true, message: 'Failed to update the passenger count for this item.' } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    email: prior.email,\n    item_key: prior.item_key,\n    new_passenger_count: returnedPassengers\n  }\n}];"
+          "jsCode": "const resp = $input.first().json;\nconst prior = $('Extract Cart Token').first().json;\nconst body = resp.body || resp;\nconst statusOk = resp.statusCode >= 200 && resp.statusCode < 300;\nconst apiSuccess = body?.success === true;\nconst returnedPassengers = body?.data?.passengers;\nconst countMatches = Number(returnedPassengers) === Number(prior.passenger_count);\n\nif (!statusOk || !apiSuccess || !countMatches) {\n  return [{ json: { error: true, message: 'Failed to update the passenger count for this item.' } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    message: 'Passenger count updated successfully.',\n    email: prior.email,\n    item_key: prior.item_key,\n    new_passenger_count: returnedPassengers\n  }\n}];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -802,66 +650,6 @@
         ],
         "id": "255ab033-4cb0-415d-9bcb-428414182c16",
         "name": "Check Update Result"
-      },
-      {
-        "parameters": {
-          "conditions": {
-            "options": {
-              "caseSensitive": true,
-              "leftValue": "",
-              "typeValidation": "strict",
-              "version": 3
-            },
-            "conditions": [
-              {
-                "id": "u-cond3",
-                "leftValue": "={{ $json.error }}",
-                "rightValue": "",
-                "operator": {
-                  "type": "boolean",
-                  "operation": "false",
-                  "singleValue": true
-                }
-              }
-            ],
-            "combinator": "and"
-          },
-          "options": {}
-        },
-        "type": "n8n-nodes-base.if",
-        "typeVersion": 2.3,
-        "position": [
-          -368,
-          64
-        ],
-        "id": "1f7638f9-2e48-46ab-9c77-a976f6e42fc6",
-        "name": "If Updated Successfully"
-      },
-      {
-        "parameters": {
-          "jsCode": "return [{ json: { error: false, message: 'Passenger count updated successfully.', new_passenger_count: $json.new_passenger_count } }];"
-        },
-        "type": "n8n-nodes-base.code",
-        "typeVersion": 2,
-        "position": [
-          -144,
-          -32
-        ],
-        "id": "a635f8af-be40-437a-bd9e-76d6c589242f",
-        "name": "Return Update Success"
-      },
-      {
-        "parameters": {
-          "jsCode": "return [{ json: { error: true, message: $json.message } }];"
-        },
-        "type": "n8n-nodes-base.code",
-        "typeVersion": 2,
-        "position": [
-          -144,
-          160
-        ],
-        "id": "a4a22afa-9c8f-48aa-9340-5741dd01a9b1",
-        "name": "Return Update Failure"
       }
     ],
     "connections": {
@@ -907,13 +695,7 @@
               "index": 0
             }
           ],
-          [
-            {
-              "node": "Return No Cart Error",
-              "type": "main",
-              "index": 0
-            }
-          ]
+          []
         ]
       },
       "Get Fresh Cart": {
@@ -947,13 +729,7 @@
               "index": 0
             }
           ],
-          [
-            {
-              "node": "Return No Session Error",
-              "type": "main",
-              "index": 0
-            }
-          ]
+          []
         ]
       },
       "Update Item via Store API": {
@@ -969,48 +745,14 @@
       },
       "Check Update Result": {
         "main": [
-          [
-            {
-              "node": "If Updated Successfully",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "If Updated Successfully": {
-        "main": [
-          [
-            {
-              "node": "Return Update Success",
-              "type": "main",
-              "index": 0
-            }
-          ],
-          [
-            {
-              "node": "Return Update Failure",
-              "type": "main",
-              "index": 0
-            }
-          ]
+          []
         ]
       }
     },
     "nodeGroups": [],
     "authors": "Rashid  Mustafa",
-    "name": "Version d943bd51",
-    "description": "",
-    "autosaved": true,
-    "workflowPublishHistory": [
-      {
-        "createdAt": "2026-08-05T09:26:45.421Z",
-        "id": 190,
-        "workflowId": "R4DoiRxM7WE6CWS6",
-        "versionId": "d943bd51-7f31-4980-9061-d634e5643110",
-        "event": "activated",
-        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    ]
+    "name": null,
+    "description": null,
+    "autosaved": false
   }
 }
