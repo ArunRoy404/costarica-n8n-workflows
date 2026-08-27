@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-27T04:25:20.869Z",
+  "updatedAt": "2026-08-27T05:27:05.789Z",
   "createdAt": "2026-06-22T04:52:28.845Z",
   "id": "ZeNz4VZTUkNMPhOP",
   "name": "CRTT - Neo",
@@ -249,7 +249,7 @@
             {
               "id": "tour_id",
               "displayName": "tour_id",
-              "required": false,
+              "required": true,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
@@ -258,7 +258,7 @@
             {
               "id": "email",
               "displayName": "email",
-              "required": false,
+              "required": true,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
@@ -267,7 +267,7 @@
             {
               "id": "passengers",
               "displayName": "passengers",
-              "required": false,
+              "required": true,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
@@ -276,7 +276,7 @@
             {
               "id": "date",
               "displayName": "date",
-              "required": false,
+              "required": true,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
@@ -285,7 +285,7 @@
             {
               "id": "pickup_location",
               "displayName": "pickup_location",
-              "required": false,
+              "required": true,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
@@ -330,7 +330,7 @@
             {
               "id": "tour_id",
               "displayName": "tour_id",
-              "required": false,
+              "required": true,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
@@ -339,7 +339,7 @@
             {
               "id": "email",
               "displayName": "email",
-              "required": false,
+              "required": true,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
@@ -348,7 +348,7 @@
             {
               "id": "passengers",
               "displayName": "passengers",
-              "required": false,
+              "required": true,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
@@ -357,7 +357,7 @@
             {
               "id": "date",
               "displayName": "date",
-              "required": false,
+              "required": true,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
@@ -366,7 +366,7 @@
             {
               "id": "pickup_location",
               "displayName": "pickup_location",
-              "required": false,
+              "required": true,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
@@ -375,7 +375,7 @@
             {
               "id": "duration",
               "displayName": "duration",
-              "required": false,
+              "required": true,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
@@ -417,7 +417,7 @@
             {
               "id": "email",
               "displayName": "email",
-              "required": false,
+              "required": true,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
@@ -458,7 +458,7 @@
             {
               "id": "email",
               "displayName": "email",
-              "required": false,
+              "required": true,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
@@ -467,7 +467,7 @@
             {
               "id": "item_key",
               "displayName": "item_key",
-              "required": false,
+              "required": true,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
@@ -737,7 +737,7 @@
             {
               "id": "email",
               "displayName": "email",
-              "required": false,
+              "required": true,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
@@ -746,7 +746,7 @@
             {
               "id": "item_key",
               "displayName": "item_key",
-              "required": false,
+              "required": true,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
@@ -755,7 +755,7 @@
             {
               "id": "passenger_count",
               "displayName": "passenger_count",
-              "required": false,
+              "required": true,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
@@ -807,7 +807,7 @@
             {
               "id": "email",
               "displayName": "email",
-              "required": false,
+              "required": true,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
@@ -816,7 +816,7 @@
             {
               "id": "first_name",
               "displayName": "first_name",
-              "required": false,
+              "required": true,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
@@ -826,7 +826,7 @@
             {
               "id": "last_name",
               "displayName": "last_name",
-              "required": false,
+              "required": true,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
@@ -846,7 +846,7 @@
             {
               "id": "address_1",
               "displayName": "address_1",
-              "required": false,
+              "required": true,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
@@ -866,7 +866,7 @@
             {
               "id": "city",
               "displayName": "city",
-              "required": false,
+              "required": true,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
@@ -876,7 +876,7 @@
             {
               "id": "state",
               "displayName": "state",
-              "required": false,
+              "required": true,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
@@ -886,7 +886,7 @@
             {
               "id": "postcode",
               "displayName": "postcode",
-              "required": false,
+              "required": true,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
@@ -896,7 +896,7 @@
             {
               "id": "country",
               "displayName": "country",
-              "required": false,
+              "required": true,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
@@ -906,7 +906,7 @@
             {
               "id": "phone",
               "displayName": "phone",
-              "required": false,
+              "required": true,
               "defaultMatch": false,
               "display": true,
               "canBeUsedToMatch": true,
@@ -1334,36 +1334,16 @@
   },
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "62e248b5-b750-4e14-b046-bee813bfe47b",
-  "activeVersionId": "62e248b5-b750-4e14-b046-bee813bfe47b",
-  "versionCounter": 979,
+  "versionId": "608968e8-eeef-4ba1-af72-7b74dc067b38",
+  "activeVersionId": "608968e8-eeef-4ba1-af72-7b74dc067b38",
+  "versionCounter": 980,
   "triggerCount": 1,
   "sourceWorkflowId": null,
-  "shared": [
-    {
-      "updatedAt": "2026-06-22T04:52:28.847Z",
-      "createdAt": "2026-06-22T04:52:28.847Z",
-      "role": "workflow:owner",
-      "workflowId": "ZeNz4VZTUkNMPhOP",
-      "projectId": "YKlYEXVQgHIwARXX",
-      "project": {
-        "updatedAt": "2026-06-03T11:53:20.889Z",
-        "createdAt": "2026-06-03T11:18:36.474Z",
-        "id": "YKlYEXVQgHIwARXX",
-        "name": "Rashid  Mustafa <info@costaricatransfersandtours.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null,
-        "customTelemetryTags": [],
-        "creatorId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    }
-  ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-08-27T04:25:30.000Z",
-    "createdAt": "2026-08-27T04:25:19.202Z",
-    "versionId": "62e248b5-b750-4e14-b046-bee813bfe47b",
+    "updatedAt": "2026-08-27T05:27:05.791Z",
+    "createdAt": "2026-08-27T05:27:05.791Z",
+    "versionId": "608968e8-eeef-4ba1-af72-7b74dc067b38",
     "workflowId": "ZeNz4VZTUkNMPhOP",
     "nodes": [
       {
@@ -1608,7 +1588,7 @@
               {
                 "id": "tour_id",
                 "displayName": "tour_id",
-                "required": false,
+                "required": true,
                 "defaultMatch": false,
                 "display": true,
                 "canBeUsedToMatch": true,
@@ -1617,7 +1597,7 @@
               {
                 "id": "email",
                 "displayName": "email",
-                "required": false,
+                "required": true,
                 "defaultMatch": false,
                 "display": true,
                 "canBeUsedToMatch": true,
@@ -1626,7 +1606,7 @@
               {
                 "id": "passengers",
                 "displayName": "passengers",
-                "required": false,
+                "required": true,
                 "defaultMatch": false,
                 "display": true,
                 "canBeUsedToMatch": true,
@@ -1635,7 +1615,7 @@
               {
                 "id": "date",
                 "displayName": "date",
-                "required": false,
+                "required": true,
                 "defaultMatch": false,
                 "display": true,
                 "canBeUsedToMatch": true,
@@ -1644,7 +1624,7 @@
               {
                 "id": "pickup_location",
                 "displayName": "pickup_location",
-                "required": false,
+                "required": true,
                 "defaultMatch": false,
                 "display": true,
                 "canBeUsedToMatch": true,
@@ -1689,7 +1669,7 @@
               {
                 "id": "tour_id",
                 "displayName": "tour_id",
-                "required": false,
+                "required": true,
                 "defaultMatch": false,
                 "display": true,
                 "canBeUsedToMatch": true,
@@ -1698,7 +1678,7 @@
               {
                 "id": "email",
                 "displayName": "email",
-                "required": false,
+                "required": true,
                 "defaultMatch": false,
                 "display": true,
                 "canBeUsedToMatch": true,
@@ -1707,7 +1687,7 @@
               {
                 "id": "passengers",
                 "displayName": "passengers",
-                "required": false,
+                "required": true,
                 "defaultMatch": false,
                 "display": true,
                 "canBeUsedToMatch": true,
@@ -1716,7 +1696,7 @@
               {
                 "id": "date",
                 "displayName": "date",
-                "required": false,
+                "required": true,
                 "defaultMatch": false,
                 "display": true,
                 "canBeUsedToMatch": true,
@@ -1725,7 +1705,7 @@
               {
                 "id": "pickup_location",
                 "displayName": "pickup_location",
-                "required": false,
+                "required": true,
                 "defaultMatch": false,
                 "display": true,
                 "canBeUsedToMatch": true,
@@ -1734,7 +1714,7 @@
               {
                 "id": "duration",
                 "displayName": "duration",
-                "required": false,
+                "required": true,
                 "defaultMatch": false,
                 "display": true,
                 "canBeUsedToMatch": true,
@@ -1776,7 +1756,7 @@
               {
                 "id": "email",
                 "displayName": "email",
-                "required": false,
+                "required": true,
                 "defaultMatch": false,
                 "display": true,
                 "canBeUsedToMatch": true,
@@ -1817,7 +1797,7 @@
               {
                 "id": "email",
                 "displayName": "email",
-                "required": false,
+                "required": true,
                 "defaultMatch": false,
                 "display": true,
                 "canBeUsedToMatch": true,
@@ -1826,7 +1806,7 @@
               {
                 "id": "item_key",
                 "displayName": "item_key",
-                "required": false,
+                "required": true,
                 "defaultMatch": false,
                 "display": true,
                 "canBeUsedToMatch": true,
@@ -2096,7 +2076,7 @@
               {
                 "id": "email",
                 "displayName": "email",
-                "required": false,
+                "required": true,
                 "defaultMatch": false,
                 "display": true,
                 "canBeUsedToMatch": true,
@@ -2105,7 +2085,7 @@
               {
                 "id": "item_key",
                 "displayName": "item_key",
-                "required": false,
+                "required": true,
                 "defaultMatch": false,
                 "display": true,
                 "canBeUsedToMatch": true,
@@ -2114,7 +2094,7 @@
               {
                 "id": "passenger_count",
                 "displayName": "passenger_count",
-                "required": false,
+                "required": true,
                 "defaultMatch": false,
                 "display": true,
                 "canBeUsedToMatch": true,
@@ -2166,7 +2146,7 @@
               {
                 "id": "email",
                 "displayName": "email",
-                "required": false,
+                "required": true,
                 "defaultMatch": false,
                 "display": true,
                 "canBeUsedToMatch": true,
@@ -2175,7 +2155,7 @@
               {
                 "id": "first_name",
                 "displayName": "first_name",
-                "required": false,
+                "required": true,
                 "defaultMatch": false,
                 "display": true,
                 "canBeUsedToMatch": true,
@@ -2185,7 +2165,7 @@
               {
                 "id": "last_name",
                 "displayName": "last_name",
-                "required": false,
+                "required": true,
                 "defaultMatch": false,
                 "display": true,
                 "canBeUsedToMatch": true,
@@ -2205,7 +2185,7 @@
               {
                 "id": "address_1",
                 "displayName": "address_1",
-                "required": false,
+                "required": true,
                 "defaultMatch": false,
                 "display": true,
                 "canBeUsedToMatch": true,
@@ -2225,7 +2205,7 @@
               {
                 "id": "city",
                 "displayName": "city",
-                "required": false,
+                "required": true,
                 "defaultMatch": false,
                 "display": true,
                 "canBeUsedToMatch": true,
@@ -2235,7 +2215,7 @@
               {
                 "id": "state",
                 "displayName": "state",
-                "required": false,
+                "required": true,
                 "defaultMatch": false,
                 "display": true,
                 "canBeUsedToMatch": true,
@@ -2245,7 +2225,7 @@
               {
                 "id": "postcode",
                 "displayName": "postcode",
-                "required": false,
+                "required": true,
                 "defaultMatch": false,
                 "display": true,
                 "canBeUsedToMatch": true,
@@ -2255,7 +2235,7 @@
               {
                 "id": "country",
                 "displayName": "country",
-                "required": false,
+                "required": true,
                 "defaultMatch": false,
                 "display": true,
                 "canBeUsedToMatch": true,
@@ -2265,7 +2245,7 @@
               {
                 "id": "phone",
                 "displayName": "phone",
-                "required": false,
+                "required": true,
                 "defaultMatch": false,
                 "display": true,
                 "canBeUsedToMatch": true,
@@ -2685,18 +2665,8 @@
     },
     "nodeGroups": [],
     "authors": "Rashid  Mustafa",
-    "name": "Version 62e248b5",
-    "description": "",
-    "autosaved": true,
-    "workflowPublishHistory": [
-      {
-        "createdAt": "2026-08-27T04:25:30.061Z",
-        "id": 310,
-        "workflowId": "ZeNz4VZTUkNMPhOP",
-        "versionId": "62e248b5-b750-4e14-b046-bee813bfe47b",
-        "event": "activated",
-        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    ]
+    "name": null,
+    "description": null,
+    "autosaved": false
   }
 }
