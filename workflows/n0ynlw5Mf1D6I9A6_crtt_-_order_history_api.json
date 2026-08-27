@@ -1,9 +1,9 @@
 {
-  "updatedAt": "2026-08-05T09:05:15.427Z",
+  "updatedAt": "2026-08-27T03:16:54.915Z",
   "createdAt": "2026-07-30T10:29:39.460Z",
   "id": "n0ynlw5Mf1D6I9A6",
   "name": "CRTT - Order History API",
-  "description": null,
+  "description": "",
   "active": true,
   "isArchived": false,
   "nodes": [
@@ -71,11 +71,15 @@
           "id": "VG4pKpGtyLYBwOzq",
           "name": "CRTT WooCommerce"
         }
-      }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
     },
     {
       "parameters": {
-        "jsCode": "const email = $('When Called by Agent').first().json.email;\nconst orders = $input.all().map(item => item.json);\n\nif (!Array.isArray(orders)) {\n  return [{ json: { error: true, message: 'Could not retrieve orders at this time.' } }];\n}\n\nconst emailLower = (email || '').trim().toLowerCase();\nconst matched = orders.filter(o => (o.billing?.email || '').trim().toLowerCase() === emailLower);\n\nif (matched.length === 0) {\n  return [{ json: { error: true, message: 'No orders were found for this email.' } }];\n}\n\nfunction extractMeta(metaArr, key) {\n  const found = (metaArr || []).find(m => m.display_key === key || m.key === key);\n  return found ? found.display_value || found.value : '';\n}\n\nconst cleaned = matched.map(o => {\n  const balanceFee = (o.fee_lines || []).find(f => (f.name || '').toLowerCase().includes('balance to pay on arrival'));\n  const balanceDue = balanceFee ? Math.abs(parseFloat(balanceFee.amount || '0')).toFixed(2) : null;\n\n  const items = (o.line_items || []).map(li => ({\n    service_name: extractMeta(li.meta_data, 'Tour') || li.name,\n    pickup_location: extractMeta(li.meta_data, 'From'),\n    pickup_date: extractMeta(li.meta_data, 'Pickup Date'),\n    pickup_time: extractMeta(li.meta_data, 'Pickup Time'),\n    passengers: extractMeta(li.meta_data, 'Passengers'),\n    quantity: li.quantity,\n    line_total: li.total\n  }));\n\n  return {\n    order_id: o.id,\n    order_number: o.number,\n    status: o.status,\n    date_created: o.date_created,\n    payment_method: o.payment_method_title || o.payment_method,\n    currency: o.currency,\n    deposit_paid_now: o.total,\n    balance_due_on_arrival: balanceDue,\n    needs_payment: o.needs_payment,\n    payment_url: o.payment_url,\n    billing: {\n      name: `${o.billing?.first_name || ''} ${o.billing?.last_name || ''}`.trim(),\n      email: o.billing?.email,\n      phone: o.billing?.phone,\n      address: [o.billing?.address_1, o.billing?.city, o.billing?.state, o.billing?.postcode, o.billing?.country].filter(Boolean).join(', ')\n    },\n    items\n  };\n});\n\nreturn [{\n  json: {\n    error: false,\n    order_count: cleaned.length,\n    orders: cleaned\n  }\n}];"
+        "jsCode": "const email = $('When Called by Agent').first().json.email;\n\n// If HTTP request failed (thanks to continueOnFail), catch it safely\nconst firstItem = $input.first()?.json;\nif (!firstItem || firstItem.error || firstItem.code === 'woocommerce_rest_cannot_view') {\n  return [{ json: { error: true, message: 'Could not retrieve orders at this time. Please try again later.' } }];\n}\n\n// n8n splits the WooCommerce array into multiple items.\nconst orders = $input.all().map(item => item.json);\n\nif (!Array.isArray(orders) || orders.length === 0 || (orders.length === 1 && Object.keys(orders[0]).length === 0)) {\n  return [{ json: { error: true, message: 'No orders were found for this email.' } }];\n}\n\nconst emailLower = (email || '').trim().toLowerCase();\nconst matched = orders.filter(o => (o.billing?.email || '').trim().toLowerCase() === emailLower);\n\nif (matched.length === 0) {\n  return [{ json: { error: true, message: 'No orders were found for this email.' } }];\n}\n\nfunction extractMeta(metaArr, key) {\n  const found = (metaArr || []).find(m => m.display_key === key || m.key === key);\n  return found ? found.display_value || found.value : '';\n}\n\nconst cleaned = matched.map(o => {\n  const balanceFee = (o.fee_lines || []).find(f => (f.name || '').toLowerCase().includes('balance to pay on arrival'));\n  const balanceDue = balanceFee ? Math.abs(parseFloat(balanceFee.amount || '0')).toFixed(2) : null;\n\n  // Make response parser robust against missing/empty line_items\n  const items = (o.line_items || []).map(li => ({\n    service_name: extractMeta(li.meta_data, 'Tour') || li.name,\n    pickup_location: extractMeta(li.meta_data, 'From'),\n    pickup_date: extractMeta(li.meta_data, 'Pickup Date'),\n    pickup_time: extractMeta(li.meta_data, 'Pickup Time'),\n    passengers: extractMeta(li.meta_data, 'Passengers'),\n    quantity: li.quantity,\n    line_total: li.total\n  }));\n\n  return {\n    order_id: o.id,\n    order_number: o.number,\n    status: o.status,\n    date_created: o.date_created,\n    payment_method: o.payment_method_title || o.payment_method,\n    currency: o.currency,\n    deposit_paid_now: o.total,\n    balance_due_on_arrival: balanceDue,\n    needs_payment: o.needs_payment,\n    payment_url: o.payment_url,\n    billing: {\n      name: `${o.billing?.first_name || ''} ${o.billing?.last_name || ''}`.trim(),\n      email: o.billing?.email,\n      phone: o.billing?.phone,\n      address: [o.billing?.address_1, o.billing?.city, o.billing?.state, o.billing?.postcode, o.billing?.country].filter(Boolean).join(', ')\n    },\n    items\n  };\n});\n\nreturn [{\n  json: {\n    error: false,\n    order_count: cleaned.length,\n    orders: cleaned\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -85,66 +89,6 @@
       ],
       "id": "2b528cc3-69f3-4579-a43d-430e232185a9",
       "name": "Filter & Clean Orders"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "o-cond1",
-              "leftValue": "={{ $json.error }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "false",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        -160,
-        -16
-      ],
-      "id": "426661d6-1814-4de8-a5af-a7447b3212e5",
-      "name": "If Orders Found"
-    },
-    {
-      "parameters": {
-        "jsCode": "return [{ json: { error: false, order_count: $json.order_count, orders: $json.orders } }];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        64,
-        -112
-      ],
-      "id": "8064a844-217c-43a3-858c-c9561b2dea77",
-      "name": "Return Orders Success"
-    },
-    {
-      "parameters": {
-        "jsCode": "return [{ json: { error: true, message: $json.message } }];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        64,
-        80
-      ],
-      "id": "0eef7050-9837-437a-9f40-09ebfab3c12d",
-      "name": "Return Orders Failure"
     }
   ],
   "connections": {
@@ -172,31 +116,7 @@
     },
     "Filter & Clean Orders": {
       "main": [
-        [
-          {
-            "node": "If Orders Found",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "If Orders Found": {
-      "main": [
-        [
-          {
-            "node": "Return Orders Success",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Return Orders Failure",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     }
   },
@@ -208,36 +128,16 @@
   "meta": null,
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "0655dfde-e25b-4c64-a55f-2a9a9b39fcad",
-  "activeVersionId": "0655dfde-e25b-4c64-a55f-2a9a9b39fcad",
-  "versionCounter": 7,
+  "versionId": "83872fe5-8cf8-4111-9f2d-c3b010c810aa",
+  "activeVersionId": "83872fe5-8cf8-4111-9f2d-c3b010c810aa",
+  "versionCounter": 8,
   "triggerCount": 0,
   "sourceWorkflowId": null,
-  "shared": [
-    {
-      "updatedAt": "2026-07-30T10:29:39.463Z",
-      "createdAt": "2026-07-30T10:29:39.463Z",
-      "role": "workflow:owner",
-      "workflowId": "n0ynlw5Mf1D6I9A6",
-      "projectId": "YKlYEXVQgHIwARXX",
-      "project": {
-        "updatedAt": "2026-06-03T11:53:20.889Z",
-        "createdAt": "2026-06-03T11:18:36.474Z",
-        "id": "YKlYEXVQgHIwARXX",
-        "name": "Rashid  Mustafa <info@costaricatransfersandtours.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null,
-        "customTelemetryTags": [],
-        "creatorId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    }
-  ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-08-05T09:05:16.000Z",
-    "createdAt": "2026-08-05T09:05:15.428Z",
-    "versionId": "0655dfde-e25b-4c64-a55f-2a9a9b39fcad",
+    "updatedAt": "2026-08-27T03:16:54.916Z",
+    "createdAt": "2026-08-27T03:16:54.916Z",
+    "versionId": "83872fe5-8cf8-4111-9f2d-c3b010c810aa",
     "workflowId": "n0ynlw5Mf1D6I9A6",
     "nodes": [
       {
@@ -304,11 +204,15 @@
             "id": "VG4pKpGtyLYBwOzq",
             "name": "CRTT WooCommerce"
           }
-        }
+        },
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 2000
       },
       {
         "parameters": {
-          "jsCode": "const email = $('When Called by Agent').first().json.email;\nconst orders = $input.all().map(item => item.json);\n\nif (!Array.isArray(orders)) {\n  return [{ json: { error: true, message: 'Could not retrieve orders at this time.' } }];\n}\n\nconst emailLower = (email || '').trim().toLowerCase();\nconst matched = orders.filter(o => (o.billing?.email || '').trim().toLowerCase() === emailLower);\n\nif (matched.length === 0) {\n  return [{ json: { error: true, message: 'No orders were found for this email.' } }];\n}\n\nfunction extractMeta(metaArr, key) {\n  const found = (metaArr || []).find(m => m.display_key === key || m.key === key);\n  return found ? found.display_value || found.value : '';\n}\n\nconst cleaned = matched.map(o => {\n  const balanceFee = (o.fee_lines || []).find(f => (f.name || '').toLowerCase().includes('balance to pay on arrival'));\n  const balanceDue = balanceFee ? Math.abs(parseFloat(balanceFee.amount || '0')).toFixed(2) : null;\n\n  const items = (o.line_items || []).map(li => ({\n    service_name: extractMeta(li.meta_data, 'Tour') || li.name,\n    pickup_location: extractMeta(li.meta_data, 'From'),\n    pickup_date: extractMeta(li.meta_data, 'Pickup Date'),\n    pickup_time: extractMeta(li.meta_data, 'Pickup Time'),\n    passengers: extractMeta(li.meta_data, 'Passengers'),\n    quantity: li.quantity,\n    line_total: li.total\n  }));\n\n  return {\n    order_id: o.id,\n    order_number: o.number,\n    status: o.status,\n    date_created: o.date_created,\n    payment_method: o.payment_method_title || o.payment_method,\n    currency: o.currency,\n    deposit_paid_now: o.total,\n    balance_due_on_arrival: balanceDue,\n    needs_payment: o.needs_payment,\n    payment_url: o.payment_url,\n    billing: {\n      name: `${o.billing?.first_name || ''} ${o.billing?.last_name || ''}`.trim(),\n      email: o.billing?.email,\n      phone: o.billing?.phone,\n      address: [o.billing?.address_1, o.billing?.city, o.billing?.state, o.billing?.postcode, o.billing?.country].filter(Boolean).join(', ')\n    },\n    items\n  };\n});\n\nreturn [{\n  json: {\n    error: false,\n    order_count: cleaned.length,\n    orders: cleaned\n  }\n}];"
+          "jsCode": "const email = $('When Called by Agent').first().json.email;\n\n// If HTTP request failed (thanks to continueOnFail), catch it safely\nconst firstItem = $input.first()?.json;\nif (!firstItem || firstItem.error || firstItem.code === 'woocommerce_rest_cannot_view') {\n  return [{ json: { error: true, message: 'Could not retrieve orders at this time. Please try again later.' } }];\n}\n\n// n8n splits the WooCommerce array into multiple items.\nconst orders = $input.all().map(item => item.json);\n\nif (!Array.isArray(orders) || orders.length === 0 || (orders.length === 1 && Object.keys(orders[0]).length === 0)) {\n  return [{ json: { error: true, message: 'No orders were found for this email.' } }];\n}\n\nconst emailLower = (email || '').trim().toLowerCase();\nconst matched = orders.filter(o => (o.billing?.email || '').trim().toLowerCase() === emailLower);\n\nif (matched.length === 0) {\n  return [{ json: { error: true, message: 'No orders were found for this email.' } }];\n}\n\nfunction extractMeta(metaArr, key) {\n  const found = (metaArr || []).find(m => m.display_key === key || m.key === key);\n  return found ? found.display_value || found.value : '';\n}\n\nconst cleaned = matched.map(o => {\n  const balanceFee = (o.fee_lines || []).find(f => (f.name || '').toLowerCase().includes('balance to pay on arrival'));\n  const balanceDue = balanceFee ? Math.abs(parseFloat(balanceFee.amount || '0')).toFixed(2) : null;\n\n  // Make response parser robust against missing/empty line_items\n  const items = (o.line_items || []).map(li => ({\n    service_name: extractMeta(li.meta_data, 'Tour') || li.name,\n    pickup_location: extractMeta(li.meta_data, 'From'),\n    pickup_date: extractMeta(li.meta_data, 'Pickup Date'),\n    pickup_time: extractMeta(li.meta_data, 'Pickup Time'),\n    passengers: extractMeta(li.meta_data, 'Passengers'),\n    quantity: li.quantity,\n    line_total: li.total\n  }));\n\n  return {\n    order_id: o.id,\n    order_number: o.number,\n    status: o.status,\n    date_created: o.date_created,\n    payment_method: o.payment_method_title || o.payment_method,\n    currency: o.currency,\n    deposit_paid_now: o.total,\n    balance_due_on_arrival: balanceDue,\n    needs_payment: o.needs_payment,\n    payment_url: o.payment_url,\n    billing: {\n      name: `${o.billing?.first_name || ''} ${o.billing?.last_name || ''}`.trim(),\n      email: o.billing?.email,\n      phone: o.billing?.phone,\n      address: [o.billing?.address_1, o.billing?.city, o.billing?.state, o.billing?.postcode, o.billing?.country].filter(Boolean).join(', ')\n    },\n    items\n  };\n});\n\nreturn [{\n  json: {\n    error: false,\n    order_count: cleaned.length,\n    orders: cleaned\n  }\n}];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -318,66 +222,6 @@
         ],
         "id": "2b528cc3-69f3-4579-a43d-430e232185a9",
         "name": "Filter & Clean Orders"
-      },
-      {
-        "parameters": {
-          "conditions": {
-            "options": {
-              "caseSensitive": true,
-              "leftValue": "",
-              "typeValidation": "strict",
-              "version": 3
-            },
-            "conditions": [
-              {
-                "id": "o-cond1",
-                "leftValue": "={{ $json.error }}",
-                "rightValue": "",
-                "operator": {
-                  "type": "boolean",
-                  "operation": "false",
-                  "singleValue": true
-                }
-              }
-            ],
-            "combinator": "and"
-          },
-          "options": {}
-        },
-        "type": "n8n-nodes-base.if",
-        "typeVersion": 2.3,
-        "position": [
-          -160,
-          -16
-        ],
-        "id": "426661d6-1814-4de8-a5af-a7447b3212e5",
-        "name": "If Orders Found"
-      },
-      {
-        "parameters": {
-          "jsCode": "return [{ json: { error: false, order_count: $json.order_count, orders: $json.orders } }];"
-        },
-        "type": "n8n-nodes-base.code",
-        "typeVersion": 2,
-        "position": [
-          64,
-          -112
-        ],
-        "id": "8064a844-217c-43a3-858c-c9561b2dea77",
-        "name": "Return Orders Success"
-      },
-      {
-        "parameters": {
-          "jsCode": "return [{ json: { error: true, message: $json.message } }];"
-        },
-        "type": "n8n-nodes-base.code",
-        "typeVersion": 2,
-        "position": [
-          64,
-          80
-        ],
-        "id": "0eef7050-9837-437a-9f40-09ebfab3c12d",
-        "name": "Return Orders Failure"
       }
     ],
     "connections": {
@@ -405,48 +249,14 @@
       },
       "Filter & Clean Orders": {
         "main": [
-          [
-            {
-              "node": "If Orders Found",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "If Orders Found": {
-        "main": [
-          [
-            {
-              "node": "Return Orders Success",
-              "type": "main",
-              "index": 0
-            }
-          ],
-          [
-            {
-              "node": "Return Orders Failure",
-              "type": "main",
-              "index": 0
-            }
-          ]
+          []
         ]
       }
     },
     "nodeGroups": [],
     "authors": "Rashid  Mustafa",
-    "name": "Version 0655dfde",
-    "description": "",
-    "autosaved": false,
-    "workflowPublishHistory": [
-      {
-        "createdAt": "2026-08-05T09:05:16.820Z",
-        "id": 178,
-        "workflowId": "n0ynlw5Mf1D6I9A6",
-        "versionId": "0655dfde-e25b-4c64-a55f-2a9a9b39fcad",
-        "event": "activated",
-        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    ]
+    "name": null,
+    "description": null,
+    "autosaved": false
   }
 }
