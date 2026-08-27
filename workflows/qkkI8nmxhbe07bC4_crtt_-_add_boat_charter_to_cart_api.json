@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-27T02:41:57.667Z",
+  "updatedAt": "2026-08-27T04:13:43.591Z",
   "createdAt": "2026-07-18T09:48:19.405Z",
   "id": "qkkI8nmxhbe07bC4",
   "name": "CRTT - Add Boat Charter to Cart API",
@@ -35,7 +35,7 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        -4368,
+        -4432,
         -432
       ],
       "id": "ca064ab6-3709-42bd-872a-f4013079f520",
@@ -49,7 +49,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -4176,
+        -4240,
         -432
       ],
       "id": "5f824e52-da16-4852-a8c1-ed4b10de22fd",
@@ -63,7 +63,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -3984,
+        -4048,
         -432
       ],
       "id": "4a385303-da13-408a-a9a5-8831e1754a41",
@@ -97,7 +97,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -3584,
+        -3872,
         -432
       ],
       "id": "6d49f120-8c81-4624-a94d-79cc42b727af",
@@ -110,7 +110,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -3584,
+        -3872,
         -208
       ],
       "id": "cbfbdf48-6563-4633-8b99-fcebde962d07",
@@ -145,8 +145,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        -3184,
-        -448
+        -3088,
+        -464
       ],
       "id": "1cd5f115-e7de-445c-b7ce-15b98a379c34",
       "name": "Read Cart Row",
@@ -165,8 +165,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2992,
-        -448
+        -2912,
+        -464
       ],
       "id": "0688e4d3-60c4-42dc-b066-0cdc66a86862",
       "name": "Normalize Cart Row"
@@ -233,8 +233,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -2400,
-        -560
+        -2464,
+        -464
       ],
       "id": "ff3925d9-9a04-4951-88e2-9f1221c454f6",
       "name": "Submit to Cart API",
@@ -270,8 +270,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -1968,
-        -432
+        -2288,
+        -464
       ],
       "id": "67559e2b-8ac2-49e5-bc13-26ceb9e97b94",
       "name": "If Add To Cart Fails"
@@ -283,8 +283,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1968,
-        -192
+        -2288,
+        -224
       ],
       "id": "366d5fde-44c0-4904-806a-26abee653eb4",
       "name": "Return Add to Cart Errors"
@@ -296,8 +296,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1520,
-        -448
+        -1840,
+        -480
       ],
       "id": "61245cea-497c-46b6-9453-947f33d695a7",
       "name": "Resolve Cart Cookie"
@@ -376,8 +376,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        -1328,
-        -448
+        -1648,
+        -480
       ],
       "id": "a72fd9d9-0f9a-41dd-8193-da68c93b7f52",
       "name": "Save Cart Cookie",
@@ -395,26 +395,27 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1136,
-        -448
+        -1456,
+        -480
       ],
       "id": "04fb338d-facb-4ba1-a321-f6983a859a43",
       "name": "Return Success"
     },
     {
       "parameters": {
-        "workflowId": "6TmemRadcJokPItN",
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "date": "={{ $('Validate + Calculate Price (Charter)').first().json.date }}"
-          }
-        }
+        "workflowId": {
+          "__rl": true,
+          "value": "6TmemRadcJokPItN",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/6TmemRadcJokPItN",
+          "cachedResultName": "CRTT - Check Boat Charter Availability"
+        },
+        "options": {}
       },
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.1,
       "position": [
-        -3384,
+        -3456,
         -448
       ],
       "id": "execute-workflow-check-availability",
@@ -448,7 +449,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -3284,
+        -3280,
         -448
       ],
       "id": "if-boat-available",
@@ -461,7 +462,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -3284,
+        -3280,
         -208
       ],
       "id": "return-availability-error",
@@ -634,16 +635,36 @@
   },
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "f10bb09d-5071-4f9e-ae0c-6ea6fba9e633",
-  "activeVersionId": "f10bb09d-5071-4f9e-ae0c-6ea6fba9e633",
-  "versionCounter": 38,
+  "versionId": "32f2217b-88ea-4945-9ab6-c5fd08d29a2a",
+  "activeVersionId": "32f2217b-88ea-4945-9ab6-c5fd08d29a2a",
+  "versionCounter": 52,
   "triggerCount": 0,
   "sourceWorkflowId": null,
+  "shared": [
+    {
+      "updatedAt": "2026-07-18T09:48:19.408Z",
+      "createdAt": "2026-07-18T09:48:19.408Z",
+      "role": "workflow:owner",
+      "workflowId": "qkkI8nmxhbe07bC4",
+      "projectId": "YKlYEXVQgHIwARXX",
+      "project": {
+        "updatedAt": "2026-06-03T11:53:20.889Z",
+        "createdAt": "2026-06-03T11:18:36.474Z",
+        "id": "YKlYEXVQgHIwARXX",
+        "name": "Rashid  Mustafa <info@costaricatransfersandtours.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
+      }
+    }
+  ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-08-27T02:41:57.668Z",
-    "createdAt": "2026-08-27T02:41:57.668Z",
-    "versionId": "f10bb09d-5071-4f9e-ae0c-6ea6fba9e633",
+    "updatedAt": "2026-08-27T04:13:46.000Z",
+    "createdAt": "2026-08-27T04:13:43.592Z",
+    "versionId": "32f2217b-88ea-4945-9ab6-c5fd08d29a2a",
     "workflowId": "qkkI8nmxhbe07bC4",
     "nodes": [
       {
@@ -674,7 +695,7 @@
         "type": "n8n-nodes-base.executeWorkflowTrigger",
         "typeVersion": 1.1,
         "position": [
-          -4368,
+          -4432,
           -432
         ],
         "id": "ca064ab6-3709-42bd-872a-f4013079f520",
@@ -688,7 +709,7 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -4176,
+          -4240,
           -432
         ],
         "id": "5f824e52-da16-4852-a8c1-ed4b10de22fd",
@@ -702,7 +723,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -3984,
+          -4048,
           -432
         ],
         "id": "4a385303-da13-408a-a9a5-8831e1754a41",
@@ -736,7 +757,7 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          -3584,
+          -3872,
           -432
         ],
         "id": "6d49f120-8c81-4624-a94d-79cc42b727af",
@@ -749,7 +770,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -3584,
+          -3872,
           -208
         ],
         "id": "cbfbdf48-6563-4633-8b99-fcebde962d07",
@@ -784,8 +805,8 @@
         "type": "n8n-nodes-base.googleSheets",
         "typeVersion": 4.5,
         "position": [
-          -3184,
-          -448
+          -3088,
+          -464
         ],
         "id": "1cd5f115-e7de-445c-b7ce-15b98a379c34",
         "name": "Read Cart Row",
@@ -804,8 +825,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -2992,
-          -448
+          -2912,
+          -464
         ],
         "id": "0688e4d3-60c4-42dc-b066-0cdc66a86862",
         "name": "Normalize Cart Row"
@@ -872,8 +893,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -2400,
-          -560
+          -2464,
+          -464
         ],
         "id": "ff3925d9-9a04-4951-88e2-9f1221c454f6",
         "name": "Submit to Cart API",
@@ -909,8 +930,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          -1968,
-          -432
+          -2288,
+          -464
         ],
         "id": "67559e2b-8ac2-49e5-bc13-26ceb9e97b94",
         "name": "If Add To Cart Fails"
@@ -922,8 +943,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -1968,
-          -192
+          -2288,
+          -224
         ],
         "id": "366d5fde-44c0-4904-806a-26abee653eb4",
         "name": "Return Add to Cart Errors"
@@ -935,8 +956,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -1520,
-          -448
+          -1840,
+          -480
         ],
         "id": "61245cea-497c-46b6-9453-947f33d695a7",
         "name": "Resolve Cart Cookie"
@@ -1015,8 +1036,8 @@
         "type": "n8n-nodes-base.googleSheets",
         "typeVersion": 4.5,
         "position": [
-          -1328,
-          -448
+          -1648,
+          -480
         ],
         "id": "a72fd9d9-0f9a-41dd-8193-da68c93b7f52",
         "name": "Save Cart Cookie",
@@ -1034,26 +1055,27 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -1136,
-          -448
+          -1456,
+          -480
         ],
         "id": "04fb338d-facb-4ba1-a321-f6983a859a43",
         "name": "Return Success"
       },
       {
         "parameters": {
-          "workflowId": "6TmemRadcJokPItN",
-          "workflowInputs": {
-            "mappingMode": "defineBelow",
-            "value": {
-              "date": "={{ $('Validate + Calculate Price (Charter)').first().json.date }}"
-            }
-          }
+          "workflowId": {
+            "__rl": true,
+            "value": "6TmemRadcJokPItN",
+            "mode": "list",
+            "cachedResultUrl": "/workflow/6TmemRadcJokPItN",
+            "cachedResultName": "CRTT - Check Boat Charter Availability"
+          },
+          "options": {}
         },
         "type": "n8n-nodes-base.executeWorkflow",
         "typeVersion": 1.1,
         "position": [
-          -3384,
+          -3456,
           -448
         ],
         "id": "execute-workflow-check-availability",
@@ -1087,7 +1109,7 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          -3284,
+          -3280,
           -448
         ],
         "id": "if-boat-available",
@@ -1100,7 +1122,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -3284,
+          -3280,
           -208
         ],
         "id": "return-availability-error",
@@ -1264,8 +1286,18 @@
     },
     "nodeGroups": [],
     "authors": "Rashid  Mustafa",
-    "name": null,
-    "description": null,
-    "autosaved": false
+    "name": "Version 32f2217b",
+    "description": "",
+    "autosaved": true,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-08-27T04:13:46.885Z",
+        "id": 306,
+        "workflowId": "qkkI8nmxhbe07bC4",
+        "versionId": "32f2217b-88ea-4945-9ab6-c5fd08d29a2a",
+        "event": "activated",
+        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
+      }
+    ]
   }
 }

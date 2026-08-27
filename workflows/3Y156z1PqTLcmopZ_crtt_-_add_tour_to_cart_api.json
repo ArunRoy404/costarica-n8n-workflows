@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-26T11:00:07.112Z",
+  "updatedAt": "2026-08-27T03:40:26.607Z",
   "createdAt": "2026-07-04T11:38:55.539Z",
   "id": "3Y156z1PqTLcmopZ",
   "name": "CRTT - Add Tour to Cart API",
@@ -32,7 +32,7 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        -4432,
+        -4288,
         64
       ],
       "id": "26687dc3-459b-4c8f-a1fe-dbb6c91ea120",
@@ -46,7 +46,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -4240,
+        -4096,
         64
       ],
       "id": "a31e95b8-ebb4-4665-b8b0-d06afc504ce2",
@@ -60,7 +60,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -4048,
+        -3904,
         64
       ],
       "id": "318b30c2-d604-4ea2-a2ad-2feae7067005",
@@ -94,7 +94,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -3648,
+        -3712,
         64
       ],
       "id": "6ab95552-f57f-4aef-b49b-21267846ee31",
@@ -107,7 +107,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -3648,
+        -3712,
         288
       ],
       "id": "5c09b30f-2108-4faa-8f3e-afd9abf145d6",
@@ -226,8 +226,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -2464,
-        -64
+        -2560,
+        48
       ],
       "id": "4a972549-40b6-4999-a173-f307603599ae",
       "name": "Submit to Cart API",
@@ -263,8 +263,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -2032,
-        64
+        -2320,
+        48
       ],
       "id": "bbee4097-5f84-4814-b099-82c22d7e91e7",
       "name": "If Add To Cart Fails"
@@ -276,8 +276,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2032,
-        304
+        -2320,
+        288
       ],
       "id": "268c53ec-1cd5-4e1d-8468-ffbd7628004a",
       "name": "Return Add to Cart Errors"
@@ -289,8 +289,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1584,
-        48
+        -1840,
+        32
       ],
       "id": "d8201169-2591-46ce-874a-0271ee30ea1e",
       "name": "Resolve Cart Cookie"
@@ -369,8 +369,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        -1392,
-        48
+        -1648,
+        32
       ],
       "id": "2e27fb63-4b9a-427d-9531-1bb06bf7020b",
       "name": "Save Cart Cookie",
@@ -388,8 +388,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1200,
-        48
+        -1456,
+        32
       ],
       "id": "9d4f148e-693a-485d-b980-142615016514",
       "name": "Return Success"
@@ -529,16 +529,36 @@
   "meta": null,
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "d4452c10-774f-41ec-a165-c4fcf7d5afca",
-  "activeVersionId": "d4452c10-774f-41ec-a165-c4fcf7d5afca",
-  "versionCounter": 177,
+  "versionId": "87129c7e-fa48-49ae-bd1f-d28400885515",
+  "activeVersionId": "87129c7e-fa48-49ae-bd1f-d28400885515",
+  "versionCounter": 188,
   "triggerCount": 0,
   "sourceWorkflowId": null,
+  "shared": [
+    {
+      "updatedAt": "2026-07-04T11:38:55.540Z",
+      "createdAt": "2026-07-04T11:38:55.540Z",
+      "role": "workflow:owner",
+      "workflowId": "3Y156z1PqTLcmopZ",
+      "projectId": "YKlYEXVQgHIwARXX",
+      "project": {
+        "updatedAt": "2026-06-03T11:53:20.889Z",
+        "createdAt": "2026-06-03T11:18:36.474Z",
+        "id": "YKlYEXVQgHIwARXX",
+        "name": "Rashid  Mustafa <info@costaricatransfersandtours.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
+      }
+    }
+  ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-08-26T11:00:07.113Z",
-    "createdAt": "2026-08-26T11:00:07.113Z",
-    "versionId": "d4452c10-774f-41ec-a165-c4fcf7d5afca",
+    "updatedAt": "2026-08-27T03:40:30.000Z",
+    "createdAt": "2026-08-27T03:40:26.609Z",
+    "versionId": "87129c7e-fa48-49ae-bd1f-d28400885515",
     "workflowId": "3Y156z1PqTLcmopZ",
     "nodes": [
       {
@@ -566,7 +586,7 @@
         "type": "n8n-nodes-base.executeWorkflowTrigger",
         "typeVersion": 1.1,
         "position": [
-          -4432,
+          -4288,
           64
         ],
         "id": "26687dc3-459b-4c8f-a1fe-dbb6c91ea120",
@@ -580,7 +600,7 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -4240,
+          -4096,
           64
         ],
         "id": "a31e95b8-ebb4-4665-b8b0-d06afc504ce2",
@@ -594,7 +614,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -4048,
+          -3904,
           64
         ],
         "id": "318b30c2-d604-4ea2-a2ad-2feae7067005",
@@ -628,7 +648,7 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          -3648,
+          -3712,
           64
         ],
         "id": "6ab95552-f57f-4aef-b49b-21267846ee31",
@@ -641,7 +661,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -3648,
+          -3712,
           288
         ],
         "id": "5c09b30f-2108-4faa-8f3e-afd9abf145d6",
@@ -760,8 +780,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -2464,
-          -64
+          -2560,
+          48
         ],
         "id": "4a972549-40b6-4999-a173-f307603599ae",
         "name": "Submit to Cart API",
@@ -797,8 +817,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          -2032,
-          64
+          -2320,
+          48
         ],
         "id": "bbee4097-5f84-4814-b099-82c22d7e91e7",
         "name": "If Add To Cart Fails"
@@ -810,8 +830,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -2032,
-          304
+          -2320,
+          288
         ],
         "id": "268c53ec-1cd5-4e1d-8468-ffbd7628004a",
         "name": "Return Add to Cart Errors"
@@ -823,8 +843,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -1584,
-          48
+          -1840,
+          32
         ],
         "id": "d8201169-2591-46ce-874a-0271ee30ea1e",
         "name": "Resolve Cart Cookie"
@@ -903,8 +923,8 @@
         "type": "n8n-nodes-base.googleSheets",
         "typeVersion": 4.5,
         "position": [
-          -1392,
-          48
+          -1648,
+          32
         ],
         "id": "2e27fb63-4b9a-427d-9531-1bb06bf7020b",
         "name": "Save Cart Cookie",
@@ -922,8 +942,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -1200,
-          48
+          -1456,
+          32
         ],
         "id": "9d4f148e-693a-485d-b980-142615016514",
         "name": "Return Success"
@@ -1057,8 +1077,18 @@
     },
     "nodeGroups": [],
     "authors": "Rashid  Mustafa",
-    "name": null,
-    "description": null,
-    "autosaved": false
+    "name": "Version 87129c7e",
+    "description": "",
+    "autosaved": true,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-08-27T03:40:30.299Z",
+        "id": 288,
+        "workflowId": "3Y156z1PqTLcmopZ",
+        "versionId": "87129c7e-fa48-49ae-bd1f-d28400885515",
+        "event": "activated",
+        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
+      }
+    ]
   }
 }

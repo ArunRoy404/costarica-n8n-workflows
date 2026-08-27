@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-27T02:52:50.100Z",
+  "updatedAt": "2026-08-27T03:49:20.828Z",
   "createdAt": "2026-08-06T10:31:37.816Z",
   "id": "6TmemRadcJokPItN",
   "name": "CRTT - Check Boat Charter Availability",
@@ -20,7 +20,7 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        -2496,
+        -2512,
         176
       ],
       "id": "a5944d5b-a024-4036-8511-fe233b6fe2b0",
@@ -54,7 +54,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -2272,
+        -2288,
         176
       ],
       "id": "e654c6a8-61b9-4c43-bc08-e03df7a680be",
@@ -67,7 +67,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2272,
+        -2288,
         416
       ],
       "id": "0b962205-0c8b-4db6-a297-9b6d4992e0fa",
@@ -336,16 +336,36 @@
   "meta": null,
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "59a60815-b4ba-472b-ae49-98722fd94623",
-  "activeVersionId": "59a60815-b4ba-472b-ae49-98722fd94623",
-  "versionCounter": 16,
+  "versionId": "a36bc209-1ce2-41e6-91d9-e204f60a93b5",
+  "activeVersionId": "a36bc209-1ce2-41e6-91d9-e204f60a93b5",
+  "versionCounter": 17,
   "triggerCount": 0,
   "sourceWorkflowId": null,
+  "shared": [
+    {
+      "updatedAt": "2026-08-06T10:31:37.818Z",
+      "createdAt": "2026-08-06T10:31:37.818Z",
+      "role": "workflow:owner",
+      "workflowId": "6TmemRadcJokPItN",
+      "projectId": "YKlYEXVQgHIwARXX",
+      "project": {
+        "updatedAt": "2026-06-03T11:53:20.889Z",
+        "createdAt": "2026-06-03T11:18:36.474Z",
+        "id": "YKlYEXVQgHIwARXX",
+        "name": "Rashid  Mustafa <info@costaricatransfersandtours.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
+      }
+    }
+  ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-08-27T02:52:50.101Z",
-    "createdAt": "2026-08-27T02:52:50.101Z",
-    "versionId": "59a60815-b4ba-472b-ae49-98722fd94623",
+    "updatedAt": "2026-08-27T03:49:25.000Z",
+    "createdAt": "2026-08-27T03:49:20.828Z",
+    "versionId": "a36bc209-1ce2-41e6-91d9-e204f60a93b5",
     "workflowId": "6TmemRadcJokPItN",
     "nodes": [
       {
@@ -361,7 +381,7 @@
         "type": "n8n-nodes-base.executeWorkflowTrigger",
         "typeVersion": 1.1,
         "position": [
-          -2496,
+          -2512,
           176
         ],
         "id": "a5944d5b-a024-4036-8511-fe233b6fe2b0",
@@ -395,7 +415,7 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          -2272,
+          -2288,
           176
         ],
         "id": "e654c6a8-61b9-4c43-bc08-e03df7a680be",
@@ -408,7 +428,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -2272,
+          -2288,
           416
         ],
         "id": "0b962205-0c8b-4db6-a297-9b6d4992e0fa",
@@ -671,8 +691,18 @@
     },
     "nodeGroups": [],
     "authors": "Rashid  Mustafa",
-    "name": null,
-    "description": null,
-    "autosaved": false
+    "name": "Version a36bc209",
+    "description": "",
+    "autosaved": true,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-08-27T03:49:25.471Z",
+        "id": 292,
+        "workflowId": "6TmemRadcJokPItN",
+        "versionId": "a36bc209-1ce2-41e6-91d9-e204f60a93b5",
+        "event": "activated",
+        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
+      }
+    ]
   }
 }

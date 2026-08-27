@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-26T10:51:58.651Z",
+  "updatedAt": "2026-08-27T03:39:15.750Z",
   "createdAt": "2026-07-30T05:24:40.294Z",
   "id": "ElKNfXom6KIH1y3h",
   "name": "CRTT - Checkout API",
@@ -53,7 +53,7 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        -7040,
+        -7184,
         -1552
       ],
       "id": "f4cd1c51-51b7-485e-a782-d59782fc0a54",
@@ -88,7 +88,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        -6816,
+        -6960,
         -1552
       ],
       "id": "f737016c-d746-4c70-bc9b-c25fc7d1cdf0",
@@ -108,7 +108,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -6592,
+        -6736,
         -1552
       ],
       "id": "f1a980f2-a75e-4fba-a9f2-b507d84c31e1",
@@ -142,7 +142,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -6368,
+        -6512,
         -1552
       ],
       "id": "ea38b4e9-5995-4174-80f9-74aaa8f101df",
@@ -155,7 +155,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -6368,
+        -6512,
         -1328
       ],
       "id": "c6c2987f-0909-4546-bd71-2c6c303df3d0",
@@ -257,7 +257,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -4864,
+        -4832,
         -1584
       ],
       "id": "8de39f3b-7179-4a78-9858-26c9154889a6",
@@ -291,7 +291,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -4640,
+        -4608,
         -1584
       ],
       "id": "65bb18fe-ae8f-4d29-bd3f-378b6ec24f19",
@@ -304,7 +304,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -4640,
+        -4608,
         -1360
       ],
       "id": "f03d4a70-eb32-470f-ac66-2d41b6361a81",
@@ -522,8 +522,7 @@
           "mode": "list",
           "cachedResultName": "cart",
           "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M/edit#gid=792596630"
-        },
-        "rowNumber": "={{ $('Read Cart Row').first().json.row_number }}"
+        }
       },
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
@@ -533,13 +532,13 @@
       ],
       "id": "clear-cart-row-id-1",
       "name": "Clear Cart Row",
-      "continueOnFail": true,
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "xFfEyXD6mSbnGpjq",
           "name": "Google Sheets account ROY"
         }
-      }
+      },
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -776,16 +775,36 @@
   "meta": null,
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "5079f995-86e6-4e02-b8ce-074c5a1db2bd",
-  "activeVersionId": "5079f995-86e6-4e02-b8ce-074c5a1db2bd",
-  "versionCounter": 36,
+  "versionId": "5ca04193-db56-4d55-a7f2-8d831c344d07",
+  "activeVersionId": "5ca04193-db56-4d55-a7f2-8d831c344d07",
+  "versionCounter": 38,
   "triggerCount": 0,
   "sourceWorkflowId": null,
+  "shared": [
+    {
+      "updatedAt": "2026-07-30T05:24:40.297Z",
+      "createdAt": "2026-07-30T05:24:40.297Z",
+      "role": "workflow:owner",
+      "workflowId": "ElKNfXom6KIH1y3h",
+      "projectId": "YKlYEXVQgHIwARXX",
+      "project": {
+        "updatedAt": "2026-06-03T11:53:20.889Z",
+        "createdAt": "2026-06-03T11:18:36.474Z",
+        "id": "YKlYEXVQgHIwARXX",
+        "name": "Rashid  Mustafa <info@costaricatransfersandtours.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
+      }
+    }
+  ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-08-26T10:51:58.652Z",
-    "createdAt": "2026-08-26T10:51:58.652Z",
-    "versionId": "5079f995-86e6-4e02-b8ce-074c5a1db2bd",
+    "updatedAt": "2026-08-27T03:39:23.000Z",
+    "createdAt": "2026-08-27T03:39:15.751Z",
+    "versionId": "5ca04193-db56-4d55-a7f2-8d831c344d07",
     "workflowId": "ElKNfXom6KIH1y3h",
     "nodes": [
       {
@@ -834,7 +853,7 @@
         "type": "n8n-nodes-base.executeWorkflowTrigger",
         "typeVersion": 1.1,
         "position": [
-          -7040,
+          -7184,
           -1552
         ],
         "id": "f4cd1c51-51b7-485e-a782-d59782fc0a54",
@@ -869,7 +888,7 @@
         "type": "n8n-nodes-base.googleSheets",
         "typeVersion": 4.5,
         "position": [
-          -6816,
+          -6960,
           -1552
         ],
         "id": "f737016c-d746-4c70-bc9b-c25fc7d1cdf0",
@@ -889,7 +908,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -6592,
+          -6736,
           -1552
         ],
         "id": "f1a980f2-a75e-4fba-a9f2-b507d84c31e1",
@@ -923,7 +942,7 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          -6368,
+          -6512,
           -1552
         ],
         "id": "ea38b4e9-5995-4174-80f9-74aaa8f101df",
@@ -936,7 +955,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -6368,
+          -6512,
           -1328
         ],
         "id": "c6c2987f-0909-4546-bd71-2c6c303df3d0",
@@ -1038,7 +1057,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -4864,
+          -4832,
           -1584
         ],
         "id": "8de39f3b-7179-4a78-9858-26c9154889a6",
@@ -1072,7 +1091,7 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          -4640,
+          -4608,
           -1584
         ],
         "id": "65bb18fe-ae8f-4d29-bd3f-378b6ec24f19",
@@ -1085,7 +1104,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -4640,
+          -4608,
           -1360
         ],
         "id": "f03d4a70-eb32-470f-ac66-2d41b6361a81",
@@ -1303,8 +1322,7 @@
             "mode": "list",
             "cachedResultName": "cart",
             "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M/edit#gid=792596630"
-          },
-          "rowNumber": "={{ $('Read Cart Row').first().json.row_number }}"
+          }
         },
         "type": "n8n-nodes-base.googleSheets",
         "typeVersion": 4.5,
@@ -1314,13 +1332,13 @@
         ],
         "id": "clear-cart-row-id-1",
         "name": "Clear Cart Row",
-        "continueOnFail": true,
         "credentials": {
           "googleSheetsOAuth2Api": {
             "id": "xFfEyXD6mSbnGpjq",
             "name": "Google Sheets account ROY"
           }
-        }
+        },
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -1551,8 +1569,18 @@
     },
     "nodeGroups": [],
     "authors": "Rashid  Mustafa",
-    "name": null,
-    "description": null,
-    "autosaved": false
+    "name": "Version 5ca04193",
+    "description": "",
+    "autosaved": true,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-08-27T03:39:23.159Z",
+        "id": 286,
+        "workflowId": "ElKNfXom6KIH1y3h",
+        "versionId": "5ca04193-db56-4d55-a7f2-8d831c344d07",
+        "event": "activated",
+        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
+      }
+    ]
   }
 }

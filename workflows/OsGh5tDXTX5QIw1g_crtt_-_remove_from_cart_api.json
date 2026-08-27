@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-27T03:03:18.512Z",
+  "updatedAt": "2026-08-27T03:51:20.428Z",
   "createdAt": "2026-07-24T10:05:18.902Z",
   "id": "OsGh5tDXTX5QIw1g",
   "name": "CRTT - Remove from Cart API",
@@ -141,7 +141,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -2672,
+        -2832,
         -432
       ],
       "id": "e5102a1e-f612-472a-a840-bacea3e65b6d",
@@ -155,7 +155,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2448,
+        -2608,
         -432
       ],
       "id": "a3f523a9-936a-4b03-8a3b-81ff2f8d5c1b",
@@ -189,7 +189,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -2224,
+        -2384,
         -432
       ],
       "id": "37d0ec24-085f-4461-a344-d10746ab9eeb",
@@ -231,7 +231,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -1552,
+        -1824,
         -448
       ],
       "id": "08b1c2ff-5773-4098-a859-1dfdb0df87d3",
@@ -247,7 +247,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1328,
+        -1600,
         -448
       ],
       "id": "a2b0d148-bcd4-47c1-b6bb-f2f8de1f5840",
@@ -291,7 +291,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -1104,
+        -1376,
         -448
       ],
       "id": "if-cart-empty-id",
@@ -311,24 +311,23 @@
           "value": 792596630,
           "mode": "list",
           "cachedResultName": "cart"
-        },
-        "rowNumber": "={{ $('Read Cart Row').first().json.row_number }}"
+        }
       },
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
         -880,
-        -448
+        -464
       ],
       "id": "clear-cart-row-id-2",
       "name": "Clear Cart Row",
-      "continueOnFail": true,
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "xFfEyXD6mSbnGpjq",
           "name": "Google Sheets account ROY"
         }
-      }
+      },
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -338,7 +337,7 @@
       "typeVersion": 2,
       "position": [
         -656,
-        -448
+        -464
       ],
       "id": "restore-payload-id",
       "name": "Format Output"
@@ -481,16 +480,36 @@
   },
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "95290607-1d72-430c-894c-5ae562b79917",
-  "activeVersionId": "95290607-1d72-430c-894c-5ae562b79917",
-  "versionCounter": 13,
+  "versionId": "9ab1250f-30a4-42e0-a24c-714f88c918fd",
+  "activeVersionId": "9ab1250f-30a4-42e0-a24c-714f88c918fd",
+  "versionCounter": 16,
   "triggerCount": 0,
   "sourceWorkflowId": null,
+  "shared": [
+    {
+      "updatedAt": "2026-07-24T10:05:18.908Z",
+      "createdAt": "2026-07-24T10:05:18.908Z",
+      "role": "workflow:owner",
+      "workflowId": "OsGh5tDXTX5QIw1g",
+      "projectId": "YKlYEXVQgHIwARXX",
+      "project": {
+        "updatedAt": "2026-06-03T11:53:20.889Z",
+        "createdAt": "2026-06-03T11:18:36.474Z",
+        "id": "YKlYEXVQgHIwARXX",
+        "name": "Rashid  Mustafa <info@costaricatransfersandtours.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
+      }
+    }
+  ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-08-27T02:59:10.336Z",
-    "createdAt": "2026-08-27T02:59:10.336Z",
-    "versionId": "95290607-1d72-430c-894c-5ae562b79917",
+    "updatedAt": "2026-08-27T03:51:23.000Z",
+    "createdAt": "2026-08-27T03:51:20.430Z",
+    "versionId": "9ab1250f-30a4-42e0-a24c-714f88c918fd",
     "workflowId": "OsGh5tDXTX5QIw1g",
     "nodes": [
       {
@@ -627,7 +646,7 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -2672,
+          -2832,
           -432
         ],
         "id": "e5102a1e-f612-472a-a840-bacea3e65b6d",
@@ -641,7 +660,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -2448,
+          -2608,
           -432
         ],
         "id": "a3f523a9-936a-4b03-8a3b-81ff2f8d5c1b",
@@ -675,7 +694,7 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          -2224,
+          -2384,
           -432
         ],
         "id": "37d0ec24-085f-4461-a344-d10746ab9eeb",
@@ -717,7 +736,7 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -1552,
+          -1824,
           -448
         ],
         "id": "08b1c2ff-5773-4098-a859-1dfdb0df87d3",
@@ -733,7 +752,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -1328,
+          -1600,
           -448
         ],
         "id": "a2b0d148-bcd4-47c1-b6bb-f2f8de1f5840",
@@ -777,7 +796,7 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          -1104,
+          -1376,
           -448
         ],
         "id": "if-cart-empty-id",
@@ -797,24 +816,23 @@
             "value": 792596630,
             "mode": "list",
             "cachedResultName": "cart"
-          },
-          "rowNumber": "={{ $('Read Cart Row').first().json.row_number }}"
+          }
         },
         "type": "n8n-nodes-base.googleSheets",
         "typeVersion": 4.5,
         "position": [
           -880,
-          -448
+          -464
         ],
         "id": "clear-cart-row-id-2",
         "name": "Clear Cart Row",
-        "continueOnFail": true,
         "credentials": {
           "googleSheetsOAuth2Api": {
             "id": "xFfEyXD6mSbnGpjq",
             "name": "Google Sheets account ROY"
           }
-        }
+        },
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -824,7 +842,7 @@
         "typeVersion": 2,
         "position": [
           -656,
-          -448
+          -464
         ],
         "id": "restore-payload-id",
         "name": "Format Output"
@@ -958,8 +976,18 @@
     },
     "nodeGroups": [],
     "authors": "Rashid  Mustafa",
-    "name": null,
-    "description": null,
-    "autosaved": false
+    "name": "Version 9ab1250f",
+    "description": "",
+    "autosaved": true,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-08-27T03:51:23.099Z",
+        "id": 296,
+        "workflowId": "OsGh5tDXTX5QIw1g",
+        "versionId": "9ab1250f-30a4-42e0-a24c-714f88c918fd",
+        "event": "activated",
+        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
+      }
+    ]
   }
 }

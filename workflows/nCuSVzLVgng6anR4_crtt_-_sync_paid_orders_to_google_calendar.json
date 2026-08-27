@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-26T10:23:56.048Z",
+  "updatedAt": "2026-08-27T03:38:55.882Z",
   "createdAt": "2026-08-06T06:15:06.576Z",
   "id": "nCuSVzLVgng6anR4",
   "name": "CRTT - Sync Paid Orders to Google Calendar",
@@ -121,8 +121,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -48,
-        -224
+        0,
+        -288
       ],
       "id": "33f8e1d5-9bfa-4fe7-8fb2-751b0d94fd92",
       "name": "Create Calendar Event",
@@ -162,8 +162,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        176,
-        -224
+        192,
+        -288
       ],
       "id": "89309534-05ca-491c-8272-2c5aa3a8c8eb",
       "name": "If Insert Failed"
@@ -187,20 +187,20 @@
       "typeVersion": 4.4,
       "position": [
         368,
-        -528
+        -512
       ],
       "id": "62c06337-ea4c-4e85-8904-053d263991d8",
       "name": "Update Calendar Event",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
       "credentials": {
         "googleCalendarOAuth2Api": {
           "id": "Z1BOdU3imFKWfkoq",
           "name": "Google Calendar account ROY"
         }
       },
-      "continueOnFail": true,
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 2000
+      "continueOnFail": true
     }
   ],
   "connections": {
@@ -309,16 +309,36 @@
   },
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "ce92eba9-1f4f-41dc-b234-75bdd691fae2",
-  "activeVersionId": "ce92eba9-1f4f-41dc-b234-75bdd691fae2",
-  "versionCounter": 37,
+  "versionId": "8567f386-e757-4b01-bda7-93deb2f9bfa0",
+  "activeVersionId": "8567f386-e757-4b01-bda7-93deb2f9bfa0",
+  "versionCounter": 50,
   "triggerCount": 1,
   "sourceWorkflowId": null,
+  "shared": [
+    {
+      "updatedAt": "2026-08-06T06:15:06.579Z",
+      "createdAt": "2026-08-06T06:15:06.579Z",
+      "role": "workflow:owner",
+      "workflowId": "nCuSVzLVgng6anR4",
+      "projectId": "YKlYEXVQgHIwARXX",
+      "project": {
+        "updatedAt": "2026-06-03T11:53:20.889Z",
+        "createdAt": "2026-06-03T11:18:36.474Z",
+        "id": "YKlYEXVQgHIwARXX",
+        "name": "Rashid  Mustafa <info@costaricatransfersandtours.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
+      }
+    }
+  ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-08-26T10:23:34.434Z",
-    "createdAt": "2026-08-26T10:23:34.434Z",
-    "versionId": "ce92eba9-1f4f-41dc-b234-75bdd691fae2",
+    "updatedAt": "2026-08-27T03:38:58.000Z",
+    "createdAt": "2026-08-27T03:38:55.883Z",
+    "versionId": "8567f386-e757-4b01-bda7-93deb2f9bfa0",
     "workflowId": "nCuSVzLVgng6anR4",
     "nodes": [
       {
@@ -435,8 +455,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -48,
-          -224
+          0,
+          -288
         ],
         "id": "33f8e1d5-9bfa-4fe7-8fb2-751b0d94fd92",
         "name": "Create Calendar Event",
@@ -476,8 +496,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          176,
-          -224
+          192,
+          -288
         ],
         "id": "89309534-05ca-491c-8272-2c5aa3a8c8eb",
         "name": "If Insert Failed"
@@ -501,20 +521,20 @@
         "typeVersion": 4.4,
         "position": [
           368,
-          -528
+          -512
         ],
         "id": "62c06337-ea4c-4e85-8904-053d263991d8",
         "name": "Update Calendar Event",
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 2000,
         "credentials": {
           "googleCalendarOAuth2Api": {
             "id": "Z1BOdU3imFKWfkoq",
             "name": "Google Calendar account ROY"
           }
         },
-        "continueOnFail": true,
-        "retryOnFail": true,
-        "maxTries": 3,
-        "waitBetweenTries": 2000
+        "continueOnFail": true
       }
     ],
     "connections": {
@@ -606,8 +626,18 @@
     },
     "nodeGroups": [],
     "authors": "Rashid  Mustafa",
-    "name": null,
-    "description": null,
-    "autosaved": false
+    "name": "Version 8567f386",
+    "description": "",
+    "autosaved": true,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-08-27T03:38:58.226Z",
+        "id": 284,
+        "workflowId": "nCuSVzLVgng6anR4",
+        "versionId": "8567f386-e757-4b01-bda7-93deb2f9bfa0",
+        "event": "activated",
+        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
+      }
+    ]
   }
 }

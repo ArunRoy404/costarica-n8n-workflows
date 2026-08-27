@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-27T03:07:53.770Z",
+  "updatedAt": "2026-08-27T03:51:39.223Z",
   "createdAt": "2026-07-29T10:22:30.259Z",
   "id": "R4DoiRxM7WE6CWS6",
   "name": "CRTT - Update Cart Item Passengers API",
@@ -144,15 +144,15 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -1936,
+        -2064,
         80
       ],
       "id": "78b6a14d-8cb3-475d-8aa0-f73837184cea",
       "name": "Get Fresh Cart",
-      "continueOnFail": true,
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 2000
+      "waitBetweenTries": 2000,
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -161,7 +161,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1712,
+        -1840,
         80
       ],
       "id": "6be702ac-f0bf-4163-9c9b-fa2f43af2ae0",
@@ -195,7 +195,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -1488,
+        -1616,
         80
       ],
       "id": "90931573-bff5-43e4-aa7d-ec82972df4fb",
@@ -247,15 +247,15 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -816,
+        -960,
         64
       ],
       "id": "232d0aca-b2d4-4812-ad5b-684f7bf20b37",
       "name": "Update Item via Store API",
-      "continueOnFail": true,
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 2000
+      "waitBetweenTries": 2000,
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -264,7 +264,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -592,
+        -736,
         64
       ],
       "id": "255ab033-4cb0-415d-9bcb-428414182c16",
@@ -376,16 +376,36 @@
   "meta": null,
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "2856c5df-47cc-40b3-941e-c0b3ada89169",
-  "activeVersionId": "2856c5df-47cc-40b3-941e-c0b3ada89169",
-  "versionCounter": 13,
+  "versionId": "34b7e29e-0daa-4997-af95-0d12dcd45e1b",
+  "activeVersionId": "34b7e29e-0daa-4997-af95-0d12dcd45e1b",
+  "versionCounter": 15,
   "triggerCount": 0,
   "sourceWorkflowId": null,
+  "shared": [
+    {
+      "updatedAt": "2026-07-29T10:22:30.263Z",
+      "createdAt": "2026-07-29T10:22:30.263Z",
+      "role": "workflow:owner",
+      "workflowId": "R4DoiRxM7WE6CWS6",
+      "projectId": "YKlYEXVQgHIwARXX",
+      "project": {
+        "updatedAt": "2026-06-03T11:53:20.889Z",
+        "createdAt": "2026-06-03T11:18:36.474Z",
+        "id": "YKlYEXVQgHIwARXX",
+        "name": "Rashid  Mustafa <info@costaricatransfersandtours.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
+      }
+    }
+  ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-08-27T03:07:53.770Z",
-    "createdAt": "2026-08-27T03:07:53.770Z",
-    "versionId": "2856c5df-47cc-40b3-941e-c0b3ada89169",
+    "updatedAt": "2026-08-27T03:51:44.000Z",
+    "createdAt": "2026-08-27T03:51:39.224Z",
+    "versionId": "34b7e29e-0daa-4997-af95-0d12dcd45e1b",
     "workflowId": "R4DoiRxM7WE6CWS6",
     "nodes": [
       {
@@ -525,15 +545,15 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -1936,
+          -2064,
           80
         ],
         "id": "78b6a14d-8cb3-475d-8aa0-f73837184cea",
         "name": "Get Fresh Cart",
-        "continueOnFail": true,
         "retryOnFail": true,
         "maxTries": 3,
-        "waitBetweenTries": 2000
+        "waitBetweenTries": 2000,
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -542,7 +562,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -1712,
+          -1840,
           80
         ],
         "id": "6be702ac-f0bf-4163-9c9b-fa2f43af2ae0",
@@ -576,7 +596,7 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.3,
         "position": [
-          -1488,
+          -1616,
           80
         ],
         "id": "90931573-bff5-43e4-aa7d-ec82972df4fb",
@@ -628,15 +648,15 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          -816,
+          -960,
           64
         ],
         "id": "232d0aca-b2d4-4812-ad5b-684f7bf20b37",
         "name": "Update Item via Store API",
-        "continueOnFail": true,
         "retryOnFail": true,
         "maxTries": 3,
-        "waitBetweenTries": 2000
+        "waitBetweenTries": 2000,
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -645,7 +665,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -592,
+          -736,
           64
         ],
         "id": "255ab033-4cb0-415d-9bcb-428414182c16",
@@ -751,8 +771,18 @@
     },
     "nodeGroups": [],
     "authors": "Rashid  Mustafa",
-    "name": null,
-    "description": null,
-    "autosaved": false
+    "name": "Version 34b7e29e",
+    "description": "",
+    "autosaved": true,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-08-27T03:51:44.345Z",
+        "id": 298,
+        "workflowId": "R4DoiRxM7WE6CWS6",
+        "versionId": "34b7e29e-0daa-4997-af95-0d12dcd45e1b",
+        "event": "activated",
+        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
+      }
+    ]
   }
 }
