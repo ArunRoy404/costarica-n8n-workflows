@@ -1,9 +1,9 @@
 {
-  "updatedAt": "2026-08-05T09:20:37.561Z",
+  "updatedAt": "2026-08-27T02:55:21.764Z",
   "createdAt": "2026-07-04T11:03:47.939Z",
   "id": "b78Su2zPQsu2tHBK",
   "name": "CRTT - Get Cart API",
-  "description": null,
+  "description": "",
   "active": true,
   "isArchived": false,
   "nodes": [
@@ -89,11 +89,15 @@
         0
       ],
       "id": "dcafdfc9-4021-4963-bc75-217417d9994f",
-      "name": "Get Cart"
+      "name": "Get Cart",
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
     },
     {
       "parameters": {
-        "jsCode": "// WooCommerce Store API sometimes returns the cart wrapped in an array — normalize that first.\nlet body = $input.first().json;\nif (Array.isArray(body)) body = body[0];\n\nconst items = body.items || [];\n\nif (items.length === 0) {\n  return [{ json: { cart_empty: true, message: 'The cart is currently empty.', items: [] } }];\n}\n\n// Helper to pull a named field out of WooCommerce's item_data array\nconst getField = (item, label) => {\n  const found = (item.item_data || []).find(f => f.name === label);\n  return found ? found.value : undefined;\n};\n\nconst minorUnit = body.totals?.currency_minor_unit ?? 2;\nconst divisor = Math.pow(10, minorUnit);\nconst toAmount = (raw) => Number(raw || 0) / divisor;\n\nconst summarizedItems = items.map(item => ({\n  key: item.key,\n  service_name: getField(item, 'Tour') || getField(item, 'Boat Charter') || item.name,\n  passengers: getField(item, 'Passengers'),\n  date: getField(item, 'Pickup Date'),\n  pickup_time: getField(item, 'Pickup Time'),\n  pickup_location: getField(item, 'Pickup Location'),\n  duration_label: getField(item, 'Duration'),\n  line_total: toAmount(item.totals?.line_total)\n}));\n\nconst currencySymbol = body.totals?.currency_symbol || '$';\n\n// Pull fee amounts by key rather than by array position, so order changes don't break this.\nconst findFee = (key) => (body.fees || []).find(f => f.key === key);\nconst paymentFee = findFee('payment-fee');\nconst balanceFee = findFee('balance-to-pay-on-arrival');\n\nconst subtotal = toAmount(body.totals?.total_items);\nconst salesTax = toAmount(body.totals?.total_tax);\nconst paymentFeeAmount = toAmount(paymentFee?.totals?.total);\n// Balance-to-pay-on-arrival is stored as a negative offset — show it as the positive amount owed on arrival.\nconst balanceOnArrival = Math.abs(toAmount(balanceFee?.totals?.total));\nconst totalPayNow = toAmount(body.totals?.total_price);\n\nreturn [{\n  json: {\n    cart_empty: false,\n    item_count: summarizedItems.length,\n    currency_symbol: currencySymbol,\n    items: summarizedItems,\n    price_breakdown: {\n      subtotal: subtotal,\n      sales_tax: salesTax,\n      payment_fee: paymentFeeAmount,\n      balance_to_pay_on_arrival: balanceOnArrival,\n      total_pay_now: totalPayNow\n    }\n  }\n}];"
+        "jsCode": "const inputData = $input.first().json;\n\n// Catch n8n HTTP Request errors (like 403 Forbidden on expired sessions)\nif (inputData.error) {\n  return [{ json: { cart_empty: true, message: 'Your cart session has expired or is invalid. Please start a new order.', items: [] } }];\n}\n\nlet body = inputData;\nif (Array.isArray(body)) body = body[0];\n\n// Catch WooCommerce specific session errors\nif (body.code === 'woocommerce_rest_cart_invalid_session' || body.data?.status >= 400) {\n  return [{ json: { cart_empty: true, message: 'Your cart session has expired. Please start a new order.', items: [] } }];\n}\n\nconst items = body.items || [];\n\nif (items.length === 0) {\n  return [{ json: { cart_empty: true, message: 'The cart is currently empty.', items: [] } }];\n}\n\n// Helper to pull a named field out of WooCommerce's item_data array\nconst getField = (item, label) => {\n  const found = (item.item_data || []).find(f => f.name === label);\n  return found ? found.value : undefined;\n};\n\nconst minorUnit = body.totals?.currency_minor_unit ?? 2;\nconst divisor = Math.pow(10, minorUnit);\nconst toAmount = (raw) => Number(raw || 0) / divisor;\n\nconst summarizedItems = items.map(item => ({\n  key: item.key,\n  service_name: getField(item, 'Tour') || getField(item, 'Boat Charter') || item.name,\n  passengers: getField(item, 'Passengers'),\n  date: getField(item, 'Pickup Date'),\n  pickup_time: getField(item, 'Pickup Time'),\n  pickup_location: getField(item, 'Pickup Location'),\n  duration_label: getField(item, 'Duration'),\n  line_total: toAmount(item.totals?.line_total)\n}));\n\nconst currencySymbol = body.totals?.currency_symbol || '$';\n\n// Pull fee amounts by key rather than by array position\nconst findFee = (key) => (body.fees || []).find(f => f.key === key);\nconst paymentFee = findFee('payment-fee');\nconst balanceFee = findFee('balance-to-pay-on-arrival');\n\nconst subtotal = toAmount(body.totals?.total_items);\nconst salesTax = toAmount(body.totals?.total_tax);\n\n// Provide safe fallbacks if the fees are missing\nconst paymentFeeAmount = paymentFee ? toAmount(paymentFee.totals?.total) : 0;\n// Balance-to-pay-on-arrival is stored as a negative offset — show it as the positive amount owed on arrival.\nconst balanceOnArrival = balanceFee ? Math.abs(toAmount(balanceFee.totals?.total)) : 0;\nconst totalPayNow = toAmount(body.totals?.total_price);\n\nreturn [{\n  json: {\n    cart_empty: false,\n    item_count: summarizedItems.length,\n    currency_symbol: currencySymbol,\n    items: summarizedItems,\n    price_breakdown: {\n      subtotal: subtotal,\n      sales_tax: salesTax,\n      payment_fee: paymentFeeAmount,\n      balance_to_pay_on_arrival: balanceOnArrival,\n      total_pay_now: totalPayNow\n    }\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -278,36 +282,16 @@
   "meta": null,
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "810cf7ab-4f02-433e-9aea-694d116fe915",
-  "activeVersionId": "810cf7ab-4f02-433e-9aea-694d116fe915",
-  "versionCounter": 66,
+  "versionId": "87462485-b849-4ebc-b47b-6e3a4b15eb67",
+  "activeVersionId": "87462485-b849-4ebc-b47b-6e3a4b15eb67",
+  "versionCounter": 74,
   "triggerCount": 0,
   "sourceWorkflowId": null,
-  "shared": [
-    {
-      "updatedAt": "2026-07-04T11:03:47.941Z",
-      "createdAt": "2026-07-04T11:03:47.941Z",
-      "role": "workflow:owner",
-      "workflowId": "b78Su2zPQsu2tHBK",
-      "projectId": "YKlYEXVQgHIwARXX",
-      "project": {
-        "updatedAt": "2026-06-03T11:53:20.889Z",
-        "createdAt": "2026-06-03T11:18:36.474Z",
-        "id": "YKlYEXVQgHIwARXX",
-        "name": "Rashid  Mustafa <info@costaricatransfersandtours.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null,
-        "customTelemetryTags": [],
-        "creatorId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    }
-  ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-08-05T09:20:41.000Z",
-    "createdAt": "2026-08-05T09:20:37.563Z",
-    "versionId": "810cf7ab-4f02-433e-9aea-694d116fe915",
+    "updatedAt": "2026-08-27T02:55:21.766Z",
+    "createdAt": "2026-08-27T02:55:21.766Z",
+    "versionId": "87462485-b849-4ebc-b47b-6e3a4b15eb67",
     "workflowId": "b78Su2zPQsu2tHBK",
     "nodes": [
       {
@@ -392,11 +376,15 @@
           0
         ],
         "id": "dcafdfc9-4021-4963-bc75-217417d9994f",
-        "name": "Get Cart"
+        "name": "Get Cart",
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 2000
       },
       {
         "parameters": {
-          "jsCode": "// WooCommerce Store API sometimes returns the cart wrapped in an array — normalize that first.\nlet body = $input.first().json;\nif (Array.isArray(body)) body = body[0];\n\nconst items = body.items || [];\n\nif (items.length === 0) {\n  return [{ json: { cart_empty: true, message: 'The cart is currently empty.', items: [] } }];\n}\n\n// Helper to pull a named field out of WooCommerce's item_data array\nconst getField = (item, label) => {\n  const found = (item.item_data || []).find(f => f.name === label);\n  return found ? found.value : undefined;\n};\n\nconst minorUnit = body.totals?.currency_minor_unit ?? 2;\nconst divisor = Math.pow(10, minorUnit);\nconst toAmount = (raw) => Number(raw || 0) / divisor;\n\nconst summarizedItems = items.map(item => ({\n  key: item.key,\n  service_name: getField(item, 'Tour') || getField(item, 'Boat Charter') || item.name,\n  passengers: getField(item, 'Passengers'),\n  date: getField(item, 'Pickup Date'),\n  pickup_time: getField(item, 'Pickup Time'),\n  pickup_location: getField(item, 'Pickup Location'),\n  duration_label: getField(item, 'Duration'),\n  line_total: toAmount(item.totals?.line_total)\n}));\n\nconst currencySymbol = body.totals?.currency_symbol || '$';\n\n// Pull fee amounts by key rather than by array position, so order changes don't break this.\nconst findFee = (key) => (body.fees || []).find(f => f.key === key);\nconst paymentFee = findFee('payment-fee');\nconst balanceFee = findFee('balance-to-pay-on-arrival');\n\nconst subtotal = toAmount(body.totals?.total_items);\nconst salesTax = toAmount(body.totals?.total_tax);\nconst paymentFeeAmount = toAmount(paymentFee?.totals?.total);\n// Balance-to-pay-on-arrival is stored as a negative offset — show it as the positive amount owed on arrival.\nconst balanceOnArrival = Math.abs(toAmount(balanceFee?.totals?.total));\nconst totalPayNow = toAmount(body.totals?.total_price);\n\nreturn [{\n  json: {\n    cart_empty: false,\n    item_count: summarizedItems.length,\n    currency_symbol: currencySymbol,\n    items: summarizedItems,\n    price_breakdown: {\n      subtotal: subtotal,\n      sales_tax: salesTax,\n      payment_fee: paymentFeeAmount,\n      balance_to_pay_on_arrival: balanceOnArrival,\n      total_pay_now: totalPayNow\n    }\n  }\n}];"
+          "jsCode": "const inputData = $input.first().json;\n\n// Catch n8n HTTP Request errors (like 403 Forbidden on expired sessions)\nif (inputData.error) {\n  return [{ json: { cart_empty: true, message: 'Your cart session has expired or is invalid. Please start a new order.', items: [] } }];\n}\n\nlet body = inputData;\nif (Array.isArray(body)) body = body[0];\n\n// Catch WooCommerce specific session errors\nif (body.code === 'woocommerce_rest_cart_invalid_session' || body.data?.status >= 400) {\n  return [{ json: { cart_empty: true, message: 'Your cart session has expired. Please start a new order.', items: [] } }];\n}\n\nconst items = body.items || [];\n\nif (items.length === 0) {\n  return [{ json: { cart_empty: true, message: 'The cart is currently empty.', items: [] } }];\n}\n\n// Helper to pull a named field out of WooCommerce's item_data array\nconst getField = (item, label) => {\n  const found = (item.item_data || []).find(f => f.name === label);\n  return found ? found.value : undefined;\n};\n\nconst minorUnit = body.totals?.currency_minor_unit ?? 2;\nconst divisor = Math.pow(10, minorUnit);\nconst toAmount = (raw) => Number(raw || 0) / divisor;\n\nconst summarizedItems = items.map(item => ({\n  key: item.key,\n  service_name: getField(item, 'Tour') || getField(item, 'Boat Charter') || item.name,\n  passengers: getField(item, 'Passengers'),\n  date: getField(item, 'Pickup Date'),\n  pickup_time: getField(item, 'Pickup Time'),\n  pickup_location: getField(item, 'Pickup Location'),\n  duration_label: getField(item, 'Duration'),\n  line_total: toAmount(item.totals?.line_total)\n}));\n\nconst currencySymbol = body.totals?.currency_symbol || '$';\n\n// Pull fee amounts by key rather than by array position\nconst findFee = (key) => (body.fees || []).find(f => f.key === key);\nconst paymentFee = findFee('payment-fee');\nconst balanceFee = findFee('balance-to-pay-on-arrival');\n\nconst subtotal = toAmount(body.totals?.total_items);\nconst salesTax = toAmount(body.totals?.total_tax);\n\n// Provide safe fallbacks if the fees are missing\nconst paymentFeeAmount = paymentFee ? toAmount(paymentFee.totals?.total) : 0;\n// Balance-to-pay-on-arrival is stored as a negative offset — show it as the positive amount owed on arrival.\nconst balanceOnArrival = balanceFee ? Math.abs(toAmount(balanceFee.totals?.total)) : 0;\nconst totalPayNow = toAmount(body.totals?.total_price);\n\nreturn [{\n  json: {\n    cart_empty: false,\n    item_count: summarizedItems.length,\n    currency_symbol: currencySymbol,\n    items: summarizedItems,\n    price_breakdown: {\n      subtotal: subtotal,\n      sales_tax: salesTax,\n      payment_fee: paymentFeeAmount,\n      balance_to_pay_on_arrival: balanceOnArrival,\n      total_pay_now: totalPayNow\n    }\n  }\n}];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -575,18 +563,8 @@
     },
     "nodeGroups": [],
     "authors": "Rashid  Mustafa",
-    "name": "Version 810cf7ab",
-    "description": "",
-    "autosaved": true,
-    "workflowPublishHistory": [
-      {
-        "createdAt": "2026-08-05T09:20:41.395Z",
-        "id": 182,
-        "workflowId": "b78Su2zPQsu2tHBK",
-        "versionId": "810cf7ab-4f02-433e-9aea-694d116fe915",
-        "event": "activated",
-        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    ]
+    "name": null,
+    "description": null,
+    "autosaved": false
   }
 }

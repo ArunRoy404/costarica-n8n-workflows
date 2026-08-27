@@ -1,9 +1,9 @@
 {
-  "updatedAt": "2026-08-06T10:49:30.750Z",
+  "updatedAt": "2026-08-27T02:52:50.100Z",
   "createdAt": "2026-08-06T10:31:37.816Z",
   "id": "6TmemRadcJokPItN",
   "name": "CRTT - Check Boat Charter Availability",
-  "description": null,
+  "description": "",
   "active": true,
   "isArchived": false,
   "nodes": [
@@ -75,7 +75,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const rawDate = $('When Called by Agent').first().json.date;\n\nfunction toIsoDate(input) {\n  if (!input) return null;\n  const isoMatch = String(input).match(/^(\\d{4})-(\\d{2})-(\\d{2})/);\n  if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;\n\n  const parsed = new Date(input);\n  if (isNaN(parsed.getTime())) return null;\n\n  const pad = n => String(n).padStart(2, '0');\n  return `${parsed.getFullYear()}-${pad(parsed.getMonth()+1)}-${pad(parsed.getDate())}`;\n}\n\nconst isoDate = toIsoDate(rawDate);\n\nif (!isoDate) {\n  return [{\n    json: {\n      isValid: false,\n      available: false,\n      checkDate: rawDate || null,\n      reason: 'invalid_date',\n      message: 'The date provided could not be understood. Please ask the user to confirm the exact date (e.g. \"August 10, 2026\").'\n    }\n  }];\n}\n\nconst now = new Date();\nconst crOffsetMs = 6 * 60 * 60 * 1000; // UTC-6, no DST\nconst crNow = new Date(now.getTime() - crOffsetMs);\nconst pad = n => String(n).padStart(2, '0');\nconst todayIso = `${crNow.getFullYear()}-${pad(crNow.getMonth()+1)}-${pad(crNow.getDate())}`;\n\nif (isoDate < todayIso) {\n  return [{\n    json: {\n      isValid: false,\n      available: false,\n      checkDate: isoDate,\n      reason: 'past_date',\n      message: 'That date is in the past. Please ask the user for a future date.'\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    isValid: true,\n    checkDate: isoDate\n  }\n}];"
+        "jsCode": "const rawDate = $('When Called by Agent').first().json.date;\n\nfunction toIsoDate(input) {\n  if (!input) return null;\n  const isoMatch = String(input).match(/^(\\d{4})-(\\d{2})-(\\d{2})/);\n  if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;\n\n  const parsed = new Date(input);\n  if (isNaN(parsed.getTime())) return null;\n\n  const pad = n => String(n).padStart(2, '0');\n  return `${parsed.getFullYear()}-${pad(parsed.getMonth()+1)}-${pad(parsed.getDate())}`;\n}\n\nconst isoDate = toIsoDate(rawDate);\n\nif (!isoDate) {\n  return [{\n    json: {\n      isValid: false,\n      available: false,\n      checkDate: rawDate || null,\n      reason: 'invalid_date',\n      message: 'The date provided could not be understood. Please ask the user to confirm the exact date (e.g. \"August 10, 2026\").'\n    }\n  }];\n}\n\nconst todayIso = DateTime.now().setZone('America/Costa_Rica').toFormat('yyyy-MM-dd');\n\nif (isoDate < todayIso) {\n  return [{\n    json: {\n      isValid: false,\n      available: false,\n      checkDate: isoDate,\n      reason: 'past_date',\n      message: 'That date is in the past. Please ask the user for a future date.'\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    isValid: true,\n    checkDate: isoDate\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -227,7 +227,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const checkDate = $('Normalize & Validate Date').item.json.checkDate;\nconst response = $input.first().json;\nconst events = response.items || [];\n\nfunction extractLine(desc, label) {\n  const re = new RegExp(`${label}:\\\\s*(.+)`, 'i');\n  const match = (desc || '').match(re);\n  return match ? match[1].trim() : null;\n}\n\nconst boatEvents = events.filter(ev => (ev.description || '').match(/Type:\\s*Boat Charters/i));\n\nif (boatEvents.length > 0) {\n  const conflict = boatEvents[0];\n  return [{\n    json: {\n      isValid: true,\n      available: false,\n      checkDate,\n      reason: 'boat_already_booked',\n      message: `Boat charters are fully booked on ${checkDate}. Only one boat charter can be booked per day, and that day is already taken.`,\n      conflicting_booking: {\n        summary: conflict.summary,\n        start: conflict.start?.dateTime || conflict.start?.date,\n        pickup_time: extractLine(conflict.description, 'Pickup Time') || null\n      }\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    isValid: true,\n    available: true,\n    checkDate,\n    reason: 'no_conflict',\n    message: `No boat charter is booked on ${checkDate}. This date is available.`,\n    otherToursThatDay: events.length\n  }\n}];"
+        "jsCode": "const checkDate = $('Normalize & Validate Date').item.json.checkDate;\nconst response = $input.first().json;\nconst events = response.items || [];\n\nfunction extractLine(desc, label) {\n  const re = new RegExp(`${label}:\\\\s*(.+)`, 'i');\n  const match = (desc || '').match(re);\n  return match ? match[1].trim() : null;\n}\n\n// Make event detection more robust\nconst boatEvents = events.filter(ev => {\n  const descMatch = (ev.description || '').match(/Type:\\s*.*Boat.*/i);\n  const sumMatch = (ev.summary || '').match(/Boat.*Charter/i);\n  return descMatch || sumMatch;\n});\n\nif (boatEvents.length > 0) {\n  // Handle multiple boat events gracefully\n  const conflicts = boatEvents.map(conflict => ({\n    summary: conflict.summary,\n    start: conflict.start?.dateTime || conflict.start?.date,\n    pickup_time: extractLine(conflict.description, 'Pickup Time') || null\n  }));\n\n  return [{\n    json: {\n      isValid: true,\n      available: false,\n      checkDate,\n      reason: 'boat_already_booked',\n      message: `Boat charters are fully booked on ${checkDate}. Only one boat charter can be booked per day, and that day is already taken.`,\n      conflicting_bookings: conflicts\n    }\n  }];\n}\n\n// NOTE: Race Condition Acknowledgment\n// Since availability check and cart checkout are separate steps, there is a small window \n// where a double-booking can occur if two users simultaneously book the same date.\n// Fully preventing this would require a database locking mechanism (holding a temporary reservation).\n\nreturn [{\n  json: {\n    isValid: true,\n    available: true,\n    checkDate,\n    reason: 'no_conflict',\n    message: `No boat charter is booked on ${checkDate}. This date is available.`,\n    otherToursThatDay: events.length\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -336,36 +336,16 @@
   "meta": null,
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "7294a9f1-9061-49ed-af5d-1b0e2e3fdc13",
-  "activeVersionId": "7294a9f1-9061-49ed-af5d-1b0e2e3fdc13",
-  "versionCounter": 15,
+  "versionId": "59a60815-b4ba-472b-ae49-98722fd94623",
+  "activeVersionId": "59a60815-b4ba-472b-ae49-98722fd94623",
+  "versionCounter": 16,
   "triggerCount": 0,
   "sourceWorkflowId": null,
-  "shared": [
-    {
-      "updatedAt": "2026-08-06T10:31:37.818Z",
-      "createdAt": "2026-08-06T10:31:37.818Z",
-      "role": "workflow:owner",
-      "workflowId": "6TmemRadcJokPItN",
-      "projectId": "YKlYEXVQgHIwARXX",
-      "project": {
-        "updatedAt": "2026-06-03T11:53:20.889Z",
-        "createdAt": "2026-06-03T11:18:36.474Z",
-        "id": "YKlYEXVQgHIwARXX",
-        "name": "Rashid  Mustafa <info@costaricatransfersandtours.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null,
-        "customTelemetryTags": [],
-        "creatorId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    }
-  ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-08-06T10:50:20.000Z",
-    "createdAt": "2026-08-06T10:49:30.751Z",
-    "versionId": "7294a9f1-9061-49ed-af5d-1b0e2e3fdc13",
+    "updatedAt": "2026-08-27T02:52:50.101Z",
+    "createdAt": "2026-08-27T02:52:50.101Z",
+    "versionId": "59a60815-b4ba-472b-ae49-98722fd94623",
     "workflowId": "6TmemRadcJokPItN",
     "nodes": [
       {
@@ -436,7 +416,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const rawDate = $('When Called by Agent').first().json.date;\n\nfunction toIsoDate(input) {\n  if (!input) return null;\n  const isoMatch = String(input).match(/^(\\d{4})-(\\d{2})-(\\d{2})/);\n  if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;\n\n  const parsed = new Date(input);\n  if (isNaN(parsed.getTime())) return null;\n\n  const pad = n => String(n).padStart(2, '0');\n  return `${parsed.getFullYear()}-${pad(parsed.getMonth()+1)}-${pad(parsed.getDate())}`;\n}\n\nconst isoDate = toIsoDate(rawDate);\n\nif (!isoDate) {\n  return [{\n    json: {\n      isValid: false,\n      available: false,\n      checkDate: rawDate || null,\n      reason: 'invalid_date',\n      message: 'The date provided could not be understood. Please ask the user to confirm the exact date (e.g. \"August 10, 2026\").'\n    }\n  }];\n}\n\nconst now = new Date();\nconst crOffsetMs = 6 * 60 * 60 * 1000; // UTC-6, no DST\nconst crNow = new Date(now.getTime() - crOffsetMs);\nconst pad = n => String(n).padStart(2, '0');\nconst todayIso = `${crNow.getFullYear()}-${pad(crNow.getMonth()+1)}-${pad(crNow.getDate())}`;\n\nif (isoDate < todayIso) {\n  return [{\n    json: {\n      isValid: false,\n      available: false,\n      checkDate: isoDate,\n      reason: 'past_date',\n      message: 'That date is in the past. Please ask the user for a future date.'\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    isValid: true,\n    checkDate: isoDate\n  }\n}];"
+          "jsCode": "const rawDate = $('When Called by Agent').first().json.date;\n\nfunction toIsoDate(input) {\n  if (!input) return null;\n  const isoMatch = String(input).match(/^(\\d{4})-(\\d{2})-(\\d{2})/);\n  if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;\n\n  const parsed = new Date(input);\n  if (isNaN(parsed.getTime())) return null;\n\n  const pad = n => String(n).padStart(2, '0');\n  return `${parsed.getFullYear()}-${pad(parsed.getMonth()+1)}-${pad(parsed.getDate())}`;\n}\n\nconst isoDate = toIsoDate(rawDate);\n\nif (!isoDate) {\n  return [{\n    json: {\n      isValid: false,\n      available: false,\n      checkDate: rawDate || null,\n      reason: 'invalid_date',\n      message: 'The date provided could not be understood. Please ask the user to confirm the exact date (e.g. \"August 10, 2026\").'\n    }\n  }];\n}\n\nconst todayIso = DateTime.now().setZone('America/Costa_Rica').toFormat('yyyy-MM-dd');\n\nif (isoDate < todayIso) {\n  return [{\n    json: {\n      isValid: false,\n      available: false,\n      checkDate: isoDate,\n      reason: 'past_date',\n      message: 'That date is in the past. Please ask the user for a future date.'\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    isValid: true,\n    checkDate: isoDate\n  }\n}];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -588,7 +568,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const checkDate = $('Normalize & Validate Date').item.json.checkDate;\nconst response = $input.first().json;\nconst events = response.items || [];\n\nfunction extractLine(desc, label) {\n  const re = new RegExp(`${label}:\\\\s*(.+)`, 'i');\n  const match = (desc || '').match(re);\n  return match ? match[1].trim() : null;\n}\n\nconst boatEvents = events.filter(ev => (ev.description || '').match(/Type:\\s*Boat Charters/i));\n\nif (boatEvents.length > 0) {\n  const conflict = boatEvents[0];\n  return [{\n    json: {\n      isValid: true,\n      available: false,\n      checkDate,\n      reason: 'boat_already_booked',\n      message: `Boat charters are fully booked on ${checkDate}. Only one boat charter can be booked per day, and that day is already taken.`,\n      conflicting_booking: {\n        summary: conflict.summary,\n        start: conflict.start?.dateTime || conflict.start?.date,\n        pickup_time: extractLine(conflict.description, 'Pickup Time') || null\n      }\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    isValid: true,\n    available: true,\n    checkDate,\n    reason: 'no_conflict',\n    message: `No boat charter is booked on ${checkDate}. This date is available.`,\n    otherToursThatDay: events.length\n  }\n}];"
+          "jsCode": "const checkDate = $('Normalize & Validate Date').item.json.checkDate;\nconst response = $input.first().json;\nconst events = response.items || [];\n\nfunction extractLine(desc, label) {\n  const re = new RegExp(`${label}:\\\\s*(.+)`, 'i');\n  const match = (desc || '').match(re);\n  return match ? match[1].trim() : null;\n}\n\n// Make event detection more robust\nconst boatEvents = events.filter(ev => {\n  const descMatch = (ev.description || '').match(/Type:\\s*.*Boat.*/i);\n  const sumMatch = (ev.summary || '').match(/Boat.*Charter/i);\n  return descMatch || sumMatch;\n});\n\nif (boatEvents.length > 0) {\n  // Handle multiple boat events gracefully\n  const conflicts = boatEvents.map(conflict => ({\n    summary: conflict.summary,\n    start: conflict.start?.dateTime || conflict.start?.date,\n    pickup_time: extractLine(conflict.description, 'Pickup Time') || null\n  }));\n\n  return [{\n    json: {\n      isValid: true,\n      available: false,\n      checkDate,\n      reason: 'boat_already_booked',\n      message: `Boat charters are fully booked on ${checkDate}. Only one boat charter can be booked per day, and that day is already taken.`,\n      conflicting_bookings: conflicts\n    }\n  }];\n}\n\n// NOTE: Race Condition Acknowledgment\n// Since availability check and cart checkout are separate steps, there is a small window \n// where a double-booking can occur if two users simultaneously book the same date.\n// Fully preventing this would require a database locking mechanism (holding a temporary reservation).\n\nreturn [{\n  json: {\n    isValid: true,\n    available: true,\n    checkDate,\n    reason: 'no_conflict',\n    message: `No boat charter is booked on ${checkDate}. This date is available.`,\n    otherToursThatDay: events.length\n  }\n}];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -691,18 +671,8 @@
     },
     "nodeGroups": [],
     "authors": "Rashid  Mustafa",
-    "name": "Version 7294a9f1",
-    "description": "",
-    "autosaved": true,
-    "workflowPublishHistory": [
-      {
-        "createdAt": "2026-08-06T10:50:20.809Z",
-        "id": 208,
-        "workflowId": "6TmemRadcJokPItN",
-        "versionId": "7294a9f1-9061-49ed-af5d-1b0e2e3fdc13",
-        "event": "activated",
-        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    ]
+    "name": null,
+    "description": null,
+    "autosaved": false
   }
 }
