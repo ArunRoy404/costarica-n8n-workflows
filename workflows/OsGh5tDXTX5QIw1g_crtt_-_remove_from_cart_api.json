@@ -1,9 +1,9 @@
 {
-  "updatedAt": "2026-08-05T09:21:13.578Z",
+  "updatedAt": "2026-08-27T03:03:18.512Z",
   "createdAt": "2026-07-24T10:05:18.902Z",
   "id": "OsGh5tDXTX5QIw1g",
   "name": "CRTT - Remove from Cart API",
-  "description": null,
+  "description": "",
   "active": true,
   "isArchived": false,
   "nodes": [
@@ -120,19 +120,6 @@
     },
     {
       "parameters": {
-        "jsCode": "return [{ json: { error: true, message: $json.message } }];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -3296,
-        -192
-      ],
-      "id": "2ea29cb6-448f-44bb-8e8c-4f5ffa17274f",
-      "name": "Return No Cart Error"
-    },
-    {
-      "parameters": {
         "url": "https://dev.costaricatransfersandtours.com/wp-json/wc/store/v1/cart",
         "sendHeaders": true,
         "headerParameters": {
@@ -158,7 +145,8 @@
         -432
       ],
       "id": "e5102a1e-f612-472a-a840-bacea3e65b6d",
-      "name": "Get Fresh Cart"
+      "name": "Get Fresh Cart",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -209,19 +197,6 @@
     },
     {
       "parameters": {
-        "jsCode": "return [{ json: { error: true, message: $json.message } }];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -2224,
-        -208
-      ],
-      "id": "b415b66b-b6a0-447a-bc5e-1ff6d7f3bcaa",
-      "name": "Return No Session Error"
-    },
-    {
-      "parameters": {
         "method": "POST",
         "url": "https://dev.costaricatransfersandtours.com/wp-json/wc/store/v1/cart/remove-item",
         "sendHeaders": true,
@@ -260,11 +235,14 @@
         -448
       ],
       "id": "08b1c2ff-5773-4098-a859-1dfdb0df87d3",
-      "name": "Remove Item via Store API"
+      "name": "Remove Item via Store API",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
     },
     {
       "parameters": {
-        "jsCode": "const resp = $input.first().json;\nconst prior = $('Extract Cart Token').first().json;\nconst body = resp.body;\nconst statusOk = resp.statusCode >= 200 && resp.statusCode < 300;\nconst stillPresent = Array.isArray(body?.items) && body.items.some(i => i.key === prior.item_key);\n\nif (!statusOk || stillPresent) {\n  return [{ json: { error: true, message: 'Failed to remove the item from the cart.' } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    email: prior.email,\n    item_key: prior.item_key,\n    remaining_items: body.items?.length ?? 0\n  }\n}];"
+        "jsCode": "const resp = $input.first().json;\nconst prior = $('Extract Cart Token').first().json;\nconst body = resp.body || resp;\nconst statusOk = resp.statusCode >= 200 && resp.statusCode < 300;\nconst stillPresent = Array.isArray(body?.items) && body.items.some(i => i.key === prior.item_key);\n\nif (!statusOk || stillPresent) {\n  return [{ json: { error: true, message: 'Failed to remove the item from the cart.' } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    message: 'Item removed from cart successfully.',\n    email: prior.email,\n    item_key: prior.item_key,\n    remaining_items: body.items?.length ?? 0\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -286,12 +264,22 @@
           },
           "conditions": [
             {
-              "id": "cond-3",
+              "id": "cond-empty",
               "leftValue": "={{ $json.error }}",
               "rightValue": "",
               "operator": {
                 "type": "boolean",
                 "operation": "false",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "cond-empty2",
+              "leftValue": "={{ $json.remaining_items }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "number",
+                "operation": "equals",
                 "singleValue": true
               }
             }
@@ -306,34 +294,54 @@
         -1104,
         -448
       ],
-      "id": "3633e57b-8a91-424b-b7ed-2af385f96d33",
-      "name": "If Removed Successfully"
+      "id": "if-cart-empty-id",
+      "name": "If Cart Empty"
     },
     {
       "parameters": {
-        "jsCode": "return [{ json: { error: false, message: 'Item removed from cart successfully.', remaining_items: $json.remaining_items } }];"
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "value": "1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M",
+          "mode": "list",
+          "cachedResultName": "CRTT"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 792596630,
+          "mode": "list",
+          "cachedResultName": "cart"
+        },
+        "rowNumber": "={{ $('Read Cart Row').first().json.row_number }}"
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -880,
+        -448
+      ],
+      "id": "clear-cart-row-id-2",
+      "name": "Clear Cart Row",
+      "continueOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xFfEyXD6mSbnGpjq",
+          "name": "Google Sheets account ROY"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: $('Check Removal Result').first().json }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -880,
-        -544
+        -656,
+        -448
       ],
-      "id": "c1ada7cf-e7df-4cd8-83cd-2758c6616bab",
-      "name": "Return Removal Success"
-    },
-    {
-      "parameters": {
-        "jsCode": "return [{ json: { error: true, message: $json.message } }];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -880,
-        -352
-      ],
-      "id": "9a5b7ee0-3c81-43d8-b8ba-6832b6f1a702",
-      "name": "Return Removal Failure"
+      "id": "restore-payload-id",
+      "name": "Format Output"
     }
   ],
   "connections": {
@@ -379,13 +387,7 @@
             "index": 0
           }
         ],
-        [
-          {
-            "node": "Return No Cart Error",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Get Fresh Cart": {
@@ -419,13 +421,7 @@
             "index": 0
           }
         ],
-        [
-          {
-            "node": "Return No Session Error",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Remove Item via Store API": {
@@ -443,25 +439,30 @@
       "main": [
         [
           {
-            "node": "If Removed Successfully",
+            "node": "If Cart Empty",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "If Removed Successfully": {
+    "If Cart Empty": {
       "main": [
         [
           {
-            "node": "Return Removal Success",
+            "node": "Clear Cart Row",
             "type": "main",
             "index": 0
           }
         ],
+        []
+      ]
+    },
+    "Clear Cart Row": {
+      "main": [
         [
           {
-            "node": "Return Removal Failure",
+            "node": "Format Output",
             "type": "main",
             "index": 0
           }
@@ -480,36 +481,16 @@
   },
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "de0191f1-0e4f-42a5-8fb2-20fc5aacebed",
-  "activeVersionId": "de0191f1-0e4f-42a5-8fb2-20fc5aacebed",
-  "versionCounter": 12,
+  "versionId": "95290607-1d72-430c-894c-5ae562b79917",
+  "activeVersionId": "95290607-1d72-430c-894c-5ae562b79917",
+  "versionCounter": 13,
   "triggerCount": 0,
   "sourceWorkflowId": null,
-  "shared": [
-    {
-      "updatedAt": "2026-07-24T10:05:18.908Z",
-      "createdAt": "2026-07-24T10:05:18.908Z",
-      "role": "workflow:owner",
-      "workflowId": "OsGh5tDXTX5QIw1g",
-      "projectId": "YKlYEXVQgHIwARXX",
-      "project": {
-        "updatedAt": "2026-06-03T11:53:20.889Z",
-        "createdAt": "2026-06-03T11:18:36.474Z",
-        "id": "YKlYEXVQgHIwARXX",
-        "name": "Rashid  Mustafa <info@costaricatransfersandtours.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null,
-        "customTelemetryTags": [],
-        "creatorId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    }
-  ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-08-05T09:22:18.000Z",
-    "createdAt": "2026-08-05T09:21:13.579Z",
-    "versionId": "de0191f1-0e4f-42a5-8fb2-20fc5aacebed",
+    "updatedAt": "2026-08-27T02:59:10.336Z",
+    "createdAt": "2026-08-27T02:59:10.336Z",
+    "versionId": "95290607-1d72-430c-894c-5ae562b79917",
     "workflowId": "OsGh5tDXTX5QIw1g",
     "nodes": [
       {
@@ -625,19 +606,6 @@
       },
       {
         "parameters": {
-          "jsCode": "return [{ json: { error: true, message: $json.message } }];"
-        },
-        "type": "n8n-nodes-base.code",
-        "typeVersion": 2,
-        "position": [
-          -3296,
-          -192
-        ],
-        "id": "2ea29cb6-448f-44bb-8e8c-4f5ffa17274f",
-        "name": "Return No Cart Error"
-      },
-      {
-        "parameters": {
           "url": "https://dev.costaricatransfersandtours.com/wp-json/wc/store/v1/cart",
           "sendHeaders": true,
           "headerParameters": {
@@ -663,7 +631,8 @@
           -432
         ],
         "id": "e5102a1e-f612-472a-a840-bacea3e65b6d",
-        "name": "Get Fresh Cart"
+        "name": "Get Fresh Cart",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -714,19 +683,6 @@
       },
       {
         "parameters": {
-          "jsCode": "return [{ json: { error: true, message: $json.message } }];"
-        },
-        "type": "n8n-nodes-base.code",
-        "typeVersion": 2,
-        "position": [
-          -2224,
-          -208
-        ],
-        "id": "b415b66b-b6a0-447a-bc5e-1ff6d7f3bcaa",
-        "name": "Return No Session Error"
-      },
-      {
-        "parameters": {
           "method": "POST",
           "url": "https://dev.costaricatransfersandtours.com/wp-json/wc/store/v1/cart/remove-item",
           "sendHeaders": true,
@@ -765,11 +721,14 @@
           -448
         ],
         "id": "08b1c2ff-5773-4098-a859-1dfdb0df87d3",
-        "name": "Remove Item via Store API"
+        "name": "Remove Item via Store API",
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 2000
       },
       {
         "parameters": {
-          "jsCode": "const resp = $input.first().json;\nconst prior = $('Extract Cart Token').first().json;\nconst body = resp.body;\nconst statusOk = resp.statusCode >= 200 && resp.statusCode < 300;\nconst stillPresent = Array.isArray(body?.items) && body.items.some(i => i.key === prior.item_key);\n\nif (!statusOk || stillPresent) {\n  return [{ json: { error: true, message: 'Failed to remove the item from the cart.' } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    email: prior.email,\n    item_key: prior.item_key,\n    remaining_items: body.items?.length ?? 0\n  }\n}];"
+          "jsCode": "const resp = $input.first().json;\nconst prior = $('Extract Cart Token').first().json;\nconst body = resp.body || resp;\nconst statusOk = resp.statusCode >= 200 && resp.statusCode < 300;\nconst stillPresent = Array.isArray(body?.items) && body.items.some(i => i.key === prior.item_key);\n\nif (!statusOk || stillPresent) {\n  return [{ json: { error: true, message: 'Failed to remove the item from the cart.' } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    message: 'Item removed from cart successfully.',\n    email: prior.email,\n    item_key: prior.item_key,\n    remaining_items: body.items?.length ?? 0\n  }\n}];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -791,12 +750,22 @@
             },
             "conditions": [
               {
-                "id": "cond-3",
+                "id": "cond-empty",
                 "leftValue": "={{ $json.error }}",
                 "rightValue": "",
                 "operator": {
                   "type": "boolean",
                   "operation": "false",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "cond-empty2",
+                "leftValue": "={{ $json.remaining_items }}",
+                "rightValue": "0",
+                "operator": {
+                  "type": "number",
+                  "operation": "equals",
                   "singleValue": true
                 }
               }
@@ -811,34 +780,54 @@
           -1104,
           -448
         ],
-        "id": "3633e57b-8a91-424b-b7ed-2af385f96d33",
-        "name": "If Removed Successfully"
+        "id": "if-cart-empty-id",
+        "name": "If Cart Empty"
       },
       {
         "parameters": {
-          "jsCode": "return [{ json: { error: false, message: 'Item removed from cart successfully.', remaining_items: $json.remaining_items } }];"
+          "operation": "delete",
+          "documentId": {
+            "__rl": true,
+            "value": "1qMTLCPL2yhU1DSU_TU0S9DrU2zhRvNv1lO5dWyGb37M",
+            "mode": "list",
+            "cachedResultName": "CRTT"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 792596630,
+            "mode": "list",
+            "cachedResultName": "cart"
+          },
+          "rowNumber": "={{ $('Read Cart Row').first().json.row_number }}"
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.5,
+        "position": [
+          -880,
+          -448
+        ],
+        "id": "clear-cart-row-id-2",
+        "name": "Clear Cart Row",
+        "continueOnFail": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "xFfEyXD6mSbnGpjq",
+            "name": "Google Sheets account ROY"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: $('Check Removal Result').first().json }];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -880,
-          -544
+          -656,
+          -448
         ],
-        "id": "c1ada7cf-e7df-4cd8-83cd-2758c6616bab",
-        "name": "Return Removal Success"
-      },
-      {
-        "parameters": {
-          "jsCode": "return [{ json: { error: true, message: $json.message } }];"
-        },
-        "type": "n8n-nodes-base.code",
-        "typeVersion": 2,
-        "position": [
-          -880,
-          -352
-        ],
-        "id": "9a5b7ee0-3c81-43d8-b8ba-6832b6f1a702",
-        "name": "Return Removal Failure"
+        "id": "restore-payload-id",
+        "name": "Format Output"
       }
     ],
     "connections": {
@@ -884,13 +873,7 @@
               "index": 0
             }
           ],
-          [
-            {
-              "node": "Return No Cart Error",
-              "type": "main",
-              "index": 0
-            }
-          ]
+          []
         ]
       },
       "Get Fresh Cart": {
@@ -924,13 +907,7 @@
               "index": 0
             }
           ],
-          [
-            {
-              "node": "Return No Session Error",
-              "type": "main",
-              "index": 0
-            }
-          ]
+          []
         ]
       },
       "Remove Item via Store API": {
@@ -948,25 +925,30 @@
         "main": [
           [
             {
-              "node": "If Removed Successfully",
+              "node": "If Cart Empty",
               "type": "main",
               "index": 0
             }
           ]
         ]
       },
-      "If Removed Successfully": {
+      "If Cart Empty": {
         "main": [
           [
             {
-              "node": "Return Removal Success",
+              "node": "Clear Cart Row",
               "type": "main",
               "index": 0
             }
           ],
+          []
+        ]
+      },
+      "Clear Cart Row": {
+        "main": [
           [
             {
-              "node": "Return Removal Failure",
+              "node": "Format Output",
               "type": "main",
               "index": 0
             }
@@ -976,18 +958,8 @@
     },
     "nodeGroups": [],
     "authors": "Rashid  Mustafa",
-    "name": "Version de0191f1",
-    "description": "",
-    "autosaved": true,
-    "workflowPublishHistory": [
-      {
-        "createdAt": "2026-08-05T09:22:18.567Z",
-        "id": 184,
-        "workflowId": "OsGh5tDXTX5QIw1g",
-        "versionId": "de0191f1-0e4f-42a5-8fb2-20fc5aacebed",
-        "event": "activated",
-        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    ]
+    "name": null,
+    "description": null,
+    "autosaved": false
   }
 }
