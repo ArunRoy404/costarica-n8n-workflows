@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-26T11:16:29.125Z",
+  "updatedAt": "2026-08-27T02:41:57.667Z",
   "createdAt": "2026-07-18T09:48:19.405Z",
   "id": "qkkI8nmxhbe07bC4",
   "name": "CRTT - Add Boat Charter to Cart API",
@@ -404,7 +404,6 @@
     {
       "parameters": {
         "workflowId": "6TmemRadcJokPItN",
-        "mode": "wait",
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
@@ -635,16 +634,16 @@
   },
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "d84c9fc6-4385-4333-aa8f-f9378fdb9a55",
-  "activeVersionId": "d84c9fc6-4385-4333-aa8f-f9378fdb9a55",
-  "versionCounter": 32,
+  "versionId": "f10bb09d-5071-4f9e-ae0c-6ea6fba9e633",
+  "activeVersionId": "f10bb09d-5071-4f9e-ae0c-6ea6fba9e633",
+  "versionCounter": 38,
   "triggerCount": 0,
   "sourceWorkflowId": null,
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-08-26T11:16:29.126Z",
-    "createdAt": "2026-08-26T11:16:29.126Z",
-    "versionId": "d84c9fc6-4385-4333-aa8f-f9378fdb9a55",
+    "updatedAt": "2026-08-27T02:41:57.668Z",
+    "createdAt": "2026-08-27T02:41:57.668Z",
+    "versionId": "f10bb09d-5071-4f9e-ae0c-6ea6fba9e633",
     "workflowId": "qkkI8nmxhbe07bC4",
     "nodes": [
       {
@@ -1044,7 +1043,6 @@
       {
         "parameters": {
           "workflowId": "6TmemRadcJokPItN",
-          "mode": "wait",
           "workflowInputs": {
             "mappingMode": "defineBelow",
             "value": {
