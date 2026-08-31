@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-27T03:40:26.607Z",
+  "updatedAt": "2026-08-31T05:30:02.802Z",
   "createdAt": "2026-07-04T11:38:55.539Z",
   "id": "3Y156z1PqTLcmopZ",
   "name": "CRTT - Add Tour to Cart API",
@@ -534,26 +534,6 @@
   "versionCounter": 188,
   "triggerCount": 0,
   "sourceWorkflowId": null,
-  "shared": [
-    {
-      "updatedAt": "2026-07-04T11:38:55.540Z",
-      "createdAt": "2026-07-04T11:38:55.540Z",
-      "role": "workflow:owner",
-      "workflowId": "3Y156z1PqTLcmopZ",
-      "projectId": "YKlYEXVQgHIwARXX",
-      "project": {
-        "updatedAt": "2026-06-03T11:53:20.889Z",
-        "createdAt": "2026-06-03T11:18:36.474Z",
-        "id": "YKlYEXVQgHIwARXX",
-        "name": "Rashid  Mustafa <info@costaricatransfersandtours.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null,
-        "customTelemetryTags": [],
-        "creatorId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    }
-  ],
   "tags": [],
   "activeVersion": {
     "updatedAt": "2026-08-27T03:40:30.000Z",
@@ -1079,16 +1059,6 @@
     "authors": "Rashid  Mustafa",
     "name": "Version 87129c7e",
     "description": "",
-    "autosaved": true,
-    "workflowPublishHistory": [
-      {
-        "createdAt": "2026-08-27T03:40:30.299Z",
-        "id": 288,
-        "workflowId": "3Y156z1PqTLcmopZ",
-        "versionId": "87129c7e-fa48-49ae-bd1f-d28400885515",
-        "event": "activated",
-        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    ]
+    "autosaved": true
   }
 }

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-27T03:50:21.173Z",
+  "updatedAt": "2026-08-31T05:30:03.510Z",
   "createdAt": "2026-07-04T11:03:47.939Z",
   "id": "b78Su2zPQsu2tHBK",
   "name": "CRTT - Get Cart API",
@@ -97,7 +97,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const inputData = $input.first().json;\n\n// Catch n8n HTTP Request errors (like 403 Forbidden on expired sessions)\nif (inputData.error) {\n  return [{ json: { cart_empty: true, message: 'Your cart session has expired or is invalid. Please start a new order.', items: [] } }];\n}\n\nlet body = inputData;\nif (Array.isArray(body)) body = body[0];\n\n// Catch WooCommerce specific session errors\nif (body.code === 'woocommerce_rest_cart_invalid_session' || body.data?.status >= 400) {\n  return [{ json: { cart_empty: true, message: 'Your cart session has expired. Please start a new order.', items: [] } }];\n}\n\nconst items = body.items || [];\n\nif (items.length === 0) {\n  return [{ json: { cart_empty: true, message: 'The cart is currently empty.', items: [] } }];\n}\n\n// Helper to pull a named field out of WooCommerce's item_data array\nconst getField = (item, label) => {\n  const found = (item.item_data || []).find(f => f.name === label);\n  return found ? found.value : undefined;\n};\n\nconst minorUnit = body.totals?.currency_minor_unit ?? 2;\nconst divisor = Math.pow(10, minorUnit);\nconst toAmount = (raw) => Number(raw || 0) / divisor;\n\nconst summarizedItems = items.map(item => ({\n  key: item.key,\n  service_name: getField(item, 'Tour') || getField(item, 'Boat Charter') || item.name,\n  passengers: getField(item, 'Passengers'),\n  date: getField(item, 'Pickup Date'),\n  pickup_time: getField(item, 'Pickup Time'),\n  pickup_location: getField(item, 'Pickup Location'),\n  duration_label: getField(item, 'Duration'),\n  line_total: toAmount(item.totals?.line_total)\n}));\n\nconst currencySymbol = body.totals?.currency_symbol || '$';\n\n// Pull fee amounts by key rather than by array position\nconst findFee = (key) => (body.fees || []).find(f => f.key === key);\nconst paymentFee = findFee('payment-fee');\nconst balanceFee = findFee('balance-to-pay-on-arrival');\n\nconst subtotal = toAmount(body.totals?.total_items);\nconst salesTax = toAmount(body.totals?.total_tax);\n\n// Provide safe fallbacks if the fees are missing\nconst paymentFeeAmount = paymentFee ? toAmount(paymentFee.totals?.total) : 0;\n// Balance-to-pay-on-arrival is stored as a negative offset — show it as the positive amount owed on arrival.\nconst balanceOnArrival = balanceFee ? Math.abs(toAmount(balanceFee.totals?.total)) : 0;\nconst totalPayNow = toAmount(body.totals?.total_price);\n\nreturn [{\n  json: {\n    cart_empty: false,\n    item_count: summarizedItems.length,\n    currency_symbol: currencySymbol,\n    items: summarizedItems,\n    price_breakdown: {\n      subtotal: subtotal,\n      sales_tax: salesTax,\n      payment_fee: paymentFeeAmount,\n      balance_to_pay_on_arrival: balanceOnArrival,\n      total_pay_now: totalPayNow\n    }\n  }\n}];"
+        "jsCode": "const inputData = $input.first()?.json || {};\n\n// Catch n8n HTTP Request errors (e.g. 403 Forbidden on expired sessions or network drop)\nif (inputData.error) {\n  return [{\n    json: {\n      cart_empty: true,\n      session_expired: true,\n      item_count: 0,\n      currency_symbol: '$',\n      message: 'Your cart session has expired or is invalid. Please start a new order.',\n      items: [],\n      price_breakdown: {\n        subtotal: 0,\n        sales_tax: 0,\n        payment_fee: 0,\n        balance_to_pay_on_arrival: 0,\n        total_pay_now: 0\n      }\n    }\n  }];\n}\n\nlet body = inputData;\nif (Array.isArray(body)) body = body[0];\n\n// Catch WooCommerce specific session errors\nif (body.code === 'woocommerce_rest_cart_invalid_session' || (body.data && body.data.status >= 400)) {\n  return [{\n    json: {\n      cart_empty: true,\n      session_expired: true,\n      item_count: 0,\n      currency_symbol: '$',\n      message: 'Your cart session has expired. Please start a new order.',\n      items: [],\n      price_breakdown: {\n        subtotal: 0,\n        sales_tax: 0,\n        payment_fee: 0,\n        balance_to_pay_on_arrival: 0,\n        total_pay_now: 0\n      }\n    }\n  }];\n}\n\nconst items = Array.isArray(body.items) ? body.items : [];\n\nif (items.length === 0) {\n  return [{\n    json: {\n      cart_empty: true,\n      item_count: 0,\n      currency_symbol: body.totals?.currency_symbol || '$',\n      message: 'The cart is currently empty.',\n      items: [],\n      price_breakdown: {\n        subtotal: 0,\n        sales_tax: 0,\n        payment_fee: 0,\n        balance_to_pay_on_arrival: 0,\n        total_pay_now: 0\n      }\n    }\n  }];\n}\n\n// Helper to safely extract custom metadata from item_data\nconst getField = (item, labelRegex) => {\n  const found = (item.item_data || []).find(f => labelRegex.test(f.name || f.key || ''));\n  return found ? found.value : undefined;\n};\n\nconst minorUnit = body.totals?.currency_minor_unit ?? 2;\nconst divisor = Math.pow(10, minorUnit);\nconst toAmount = (raw) => Number(raw || 0) / divisor;\n\nconst summarizedItems = items.map(item => ({\n  key: item.key,\n  service_name: getField(item, /^tour$/i) || getField(item, /boat.*charter/i) || getField(item, /service/i) || item.name,\n  passengers: getField(item, /passenger/i) || item.quantity,\n  date: getField(item, /date/i),\n  pickup_time: getField(item, /pickup.*time/i),\n  pickup_location: getField(item, /pickup.*loc/i),\n  duration_label: getField(item, /duration/i),\n  line_total: toAmount(item.totals?.line_total)\n}));\n\nconst currencySymbol = body.totals?.currency_symbol || '$';\n\n// Pull fee amounts by key safely\nconst findFee = (key) => (body.fees || []).find(f => (f.key || f.id || '').toLowerCase().includes(key.toLowerCase()));\nconst paymentFee = findFee('payment-fee');\nconst balanceFee = findFee('balance-to-pay-on-arrival') || findFee('balance');\n\nconst subtotal = toAmount(body.totals?.total_items);\nconst salesTax = toAmount(body.totals?.total_tax);\nconst paymentFeeAmount = paymentFee ? toAmount(paymentFee.totals?.total) : 0;\nconst balanceOnArrival = balanceFee ? Math.abs(toAmount(balanceFee.totals?.total)) : 0;\nconst totalPayNow = toAmount(body.totals?.total_price);\n\nreturn [{\n  json: {\n    cart_empty: false,\n    item_count: summarizedItems.length,\n    currency_symbol: currencySymbol,\n    items: summarizedItems,\n    price_breakdown: {\n      subtotal,\n      sales_tax: salesTax,\n      payment_fee: paymentFeeAmount,\n      balance_to_pay_on_arrival: balanceOnArrival,\n      total_pay_now: totalPayNow\n    }\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -110,7 +110,7 @@
     },
     {
       "parameters": {
-        "jsCode": "return [{ json: { cart_empty: true, message: 'No cart found yet for this email.', items: [] } }];"
+        "jsCode": "return [{\n  json: {\n    cart_empty: true,\n    item_count: 0,\n    currency_symbol: '$',\n    message: 'No cart found yet for this email.',\n    items: [],\n    price_breakdown: {\n      subtotal: 0,\n      sales_tax: 0,\n      payment_fee: 0,\n      balance_to_pay_on_arrival: 0,\n      total_pay_now: 0\n    }\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -123,7 +123,7 @@
     },
     {
       "parameters": {
-        "jsCode": "return [{ json: { no_email_provided: true, message: 'No user email was provided.', items: [] } }];"
+        "jsCode": "return [{\n  json: {\n    no_email_provided: true,\n    cart_empty: true,\n    item_count: 0,\n    currency_symbol: '$',\n    message: 'No user email was provided.',\n    items: [],\n    price_breakdown: {\n      subtotal: 0,\n      sales_tax: 0,\n      payment_fee: 0,\n      balance_to_pay_on_arrival: 0,\n      total_pay_now: 0\n    }\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -282,36 +282,16 @@
   "meta": null,
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "c3390b7d-c8f5-46be-8803-43c6756ce351",
-  "activeVersionId": "c3390b7d-c8f5-46be-8803-43c6756ce351",
-  "versionCounter": 77,
+  "versionId": "9d3ab8b4-cfe2-4c43-b2a0-6103d1d234c8",
+  "activeVersionId": "9d3ab8b4-cfe2-4c43-b2a0-6103d1d234c8",
+  "versionCounter": 78,
   "triggerCount": 0,
   "sourceWorkflowId": null,
-  "shared": [
-    {
-      "updatedAt": "2026-07-04T11:03:47.941Z",
-      "createdAt": "2026-07-04T11:03:47.941Z",
-      "role": "workflow:owner",
-      "workflowId": "b78Su2zPQsu2tHBK",
-      "projectId": "YKlYEXVQgHIwARXX",
-      "project": {
-        "updatedAt": "2026-06-03T11:53:20.889Z",
-        "createdAt": "2026-06-03T11:18:36.474Z",
-        "id": "YKlYEXVQgHIwARXX",
-        "name": "Rashid  Mustafa <info@costaricatransfersandtours.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null,
-        "customTelemetryTags": [],
-        "creatorId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    }
-  ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-08-27T03:50:24.000Z",
-    "createdAt": "2026-08-27T03:50:21.174Z",
-    "versionId": "c3390b7d-c8f5-46be-8803-43c6756ce351",
+    "updatedAt": "2026-08-31T05:30:03.511Z",
+    "createdAt": "2026-08-31T05:30:03.511Z",
+    "versionId": "9d3ab8b4-cfe2-4c43-b2a0-6103d1d234c8",
     "workflowId": "b78Su2zPQsu2tHBK",
     "nodes": [
       {
@@ -404,7 +384,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const inputData = $input.first().json;\n\n// Catch n8n HTTP Request errors (like 403 Forbidden on expired sessions)\nif (inputData.error) {\n  return [{ json: { cart_empty: true, message: 'Your cart session has expired or is invalid. Please start a new order.', items: [] } }];\n}\n\nlet body = inputData;\nif (Array.isArray(body)) body = body[0];\n\n// Catch WooCommerce specific session errors\nif (body.code === 'woocommerce_rest_cart_invalid_session' || body.data?.status >= 400) {\n  return [{ json: { cart_empty: true, message: 'Your cart session has expired. Please start a new order.', items: [] } }];\n}\n\nconst items = body.items || [];\n\nif (items.length === 0) {\n  return [{ json: { cart_empty: true, message: 'The cart is currently empty.', items: [] } }];\n}\n\n// Helper to pull a named field out of WooCommerce's item_data array\nconst getField = (item, label) => {\n  const found = (item.item_data || []).find(f => f.name === label);\n  return found ? found.value : undefined;\n};\n\nconst minorUnit = body.totals?.currency_minor_unit ?? 2;\nconst divisor = Math.pow(10, minorUnit);\nconst toAmount = (raw) => Number(raw || 0) / divisor;\n\nconst summarizedItems = items.map(item => ({\n  key: item.key,\n  service_name: getField(item, 'Tour') || getField(item, 'Boat Charter') || item.name,\n  passengers: getField(item, 'Passengers'),\n  date: getField(item, 'Pickup Date'),\n  pickup_time: getField(item, 'Pickup Time'),\n  pickup_location: getField(item, 'Pickup Location'),\n  duration_label: getField(item, 'Duration'),\n  line_total: toAmount(item.totals?.line_total)\n}));\n\nconst currencySymbol = body.totals?.currency_symbol || '$';\n\n// Pull fee amounts by key rather than by array position\nconst findFee = (key) => (body.fees || []).find(f => f.key === key);\nconst paymentFee = findFee('payment-fee');\nconst balanceFee = findFee('balance-to-pay-on-arrival');\n\nconst subtotal = toAmount(body.totals?.total_items);\nconst salesTax = toAmount(body.totals?.total_tax);\n\n// Provide safe fallbacks if the fees are missing\nconst paymentFeeAmount = paymentFee ? toAmount(paymentFee.totals?.total) : 0;\n// Balance-to-pay-on-arrival is stored as a negative offset — show it as the positive amount owed on arrival.\nconst balanceOnArrival = balanceFee ? Math.abs(toAmount(balanceFee.totals?.total)) : 0;\nconst totalPayNow = toAmount(body.totals?.total_price);\n\nreturn [{\n  json: {\n    cart_empty: false,\n    item_count: summarizedItems.length,\n    currency_symbol: currencySymbol,\n    items: summarizedItems,\n    price_breakdown: {\n      subtotal: subtotal,\n      sales_tax: salesTax,\n      payment_fee: paymentFeeAmount,\n      balance_to_pay_on_arrival: balanceOnArrival,\n      total_pay_now: totalPayNow\n    }\n  }\n}];"
+          "jsCode": "const inputData = $input.first()?.json || {};\n\n// Catch n8n HTTP Request errors (e.g. 403 Forbidden on expired sessions or network drop)\nif (inputData.error) {\n  return [{\n    json: {\n      cart_empty: true,\n      session_expired: true,\n      item_count: 0,\n      currency_symbol: '$',\n      message: 'Your cart session has expired or is invalid. Please start a new order.',\n      items: [],\n      price_breakdown: {\n        subtotal: 0,\n        sales_tax: 0,\n        payment_fee: 0,\n        balance_to_pay_on_arrival: 0,\n        total_pay_now: 0\n      }\n    }\n  }];\n}\n\nlet body = inputData;\nif (Array.isArray(body)) body = body[0];\n\n// Catch WooCommerce specific session errors\nif (body.code === 'woocommerce_rest_cart_invalid_session' || (body.data && body.data.status >= 400)) {\n  return [{\n    json: {\n      cart_empty: true,\n      session_expired: true,\n      item_count: 0,\n      currency_symbol: '$',\n      message: 'Your cart session has expired. Please start a new order.',\n      items: [],\n      price_breakdown: {\n        subtotal: 0,\n        sales_tax: 0,\n        payment_fee: 0,\n        balance_to_pay_on_arrival: 0,\n        total_pay_now: 0\n      }\n    }\n  }];\n}\n\nconst items = Array.isArray(body.items) ? body.items : [];\n\nif (items.length === 0) {\n  return [{\n    json: {\n      cart_empty: true,\n      item_count: 0,\n      currency_symbol: body.totals?.currency_symbol || '$',\n      message: 'The cart is currently empty.',\n      items: [],\n      price_breakdown: {\n        subtotal: 0,\n        sales_tax: 0,\n        payment_fee: 0,\n        balance_to_pay_on_arrival: 0,\n        total_pay_now: 0\n      }\n    }\n  }];\n}\n\n// Helper to safely extract custom metadata from item_data\nconst getField = (item, labelRegex) => {\n  const found = (item.item_data || []).find(f => labelRegex.test(f.name || f.key || ''));\n  return found ? found.value : undefined;\n};\n\nconst minorUnit = body.totals?.currency_minor_unit ?? 2;\nconst divisor = Math.pow(10, minorUnit);\nconst toAmount = (raw) => Number(raw || 0) / divisor;\n\nconst summarizedItems = items.map(item => ({\n  key: item.key,\n  service_name: getField(item, /^tour$/i) || getField(item, /boat.*charter/i) || getField(item, /service/i) || item.name,\n  passengers: getField(item, /passenger/i) || item.quantity,\n  date: getField(item, /date/i),\n  pickup_time: getField(item, /pickup.*time/i),\n  pickup_location: getField(item, /pickup.*loc/i),\n  duration_label: getField(item, /duration/i),\n  line_total: toAmount(item.totals?.line_total)\n}));\n\nconst currencySymbol = body.totals?.currency_symbol || '$';\n\n// Pull fee amounts by key safely\nconst findFee = (key) => (body.fees || []).find(f => (f.key || f.id || '').toLowerCase().includes(key.toLowerCase()));\nconst paymentFee = findFee('payment-fee');\nconst balanceFee = findFee('balance-to-pay-on-arrival') || findFee('balance');\n\nconst subtotal = toAmount(body.totals?.total_items);\nconst salesTax = toAmount(body.totals?.total_tax);\nconst paymentFeeAmount = paymentFee ? toAmount(paymentFee.totals?.total) : 0;\nconst balanceOnArrival = balanceFee ? Math.abs(toAmount(balanceFee.totals?.total)) : 0;\nconst totalPayNow = toAmount(body.totals?.total_price);\n\nreturn [{\n  json: {\n    cart_empty: false,\n    item_count: summarizedItems.length,\n    currency_symbol: currencySymbol,\n    items: summarizedItems,\n    price_breakdown: {\n      subtotal,\n      sales_tax: salesTax,\n      payment_fee: paymentFeeAmount,\n      balance_to_pay_on_arrival: balanceOnArrival,\n      total_pay_now: totalPayNow\n    }\n  }\n}];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -417,7 +397,7 @@
       },
       {
         "parameters": {
-          "jsCode": "return [{ json: { cart_empty: true, message: 'No cart found yet for this email.', items: [] } }];"
+          "jsCode": "return [{\n  json: {\n    cart_empty: true,\n    item_count: 0,\n    currency_symbol: '$',\n    message: 'No cart found yet for this email.',\n    items: [],\n    price_breakdown: {\n      subtotal: 0,\n      sales_tax: 0,\n      payment_fee: 0,\n      balance_to_pay_on_arrival: 0,\n      total_pay_now: 0\n    }\n  }\n}];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -430,7 +410,7 @@
       },
       {
         "parameters": {
-          "jsCode": "return [{ json: { no_email_provided: true, message: 'No user email was provided.', items: [] } }];"
+          "jsCode": "return [{\n  json: {\n    no_email_provided: true,\n    cart_empty: true,\n    item_count: 0,\n    currency_symbol: '$',\n    message: 'No user email was provided.',\n    items: [],\n    price_breakdown: {\n      subtotal: 0,\n      sales_tax: 0,\n      payment_fee: 0,\n      balance_to_pay_on_arrival: 0,\n      total_pay_now: 0\n    }\n  }\n}];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -583,18 +563,8 @@
     },
     "nodeGroups": [],
     "authors": "Rashid  Mustafa",
-    "name": "Version c3390b7d",
-    "description": "",
-    "autosaved": true,
-    "workflowPublishHistory": [
-      {
-        "createdAt": "2026-08-27T03:50:24.717Z",
-        "id": 294,
-        "workflowId": "b78Su2zPQsu2tHBK",
-        "versionId": "c3390b7d-c8f5-46be-8803-43c6756ce351",
-        "event": "activated",
-        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    ]
+    "name": null,
+    "description": null,
+    "autosaved": false
   }
 }

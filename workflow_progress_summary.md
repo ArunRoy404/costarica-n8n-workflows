@@ -33,6 +33,33 @@ Here is a summary of all the workflows we have successfully fixed and pushed so 
 
 ---
 
+## 5. 🟡 Check Boat Charter Availability (`6TmemRadcJokPItN`)
+**Status:** ✅ Completed & Robust
+
+* **Timezone & Date Parsing:** Refactored date normalization to use Luxon `DateTime` with explicit `America/Costa_Rica` timezone. Handles ISO dates, common text/slashed formats, and verifies past dates against local Costa Rica time.
+* **Cancelled Event Filtering:** Added filtering to ignore `status: 'cancelled'` calendar events so deleted bookings do not block valid dates.
+* **Calendar ID Preserved:** Kept the hardcoded Google Calendar ID as requested.
+* **Retries & Error Handling:** Added 3-try retry policy on the Google Calendar Events API request with fallback error payloads.
+
+## 6. 🟡 Get Cart API (`b78Su2zPQsu2tHBK`)
+**Status:** ✅ Completed & Robust
+
+* **Expired / Invalid Session Detection:** Added detection for WooCommerce `woocommerce_rest_cart_invalid_session` and HTTP 403 errors, returning structured session-expired responses to the AI agent.
+* **Safe Fee & Meta Extractions:** Extracted `payment-fee`, `balance-to-pay-on-arrival`, and item details using regex-safe field matchers with clean numerical fallbacks.
+* **Structured Fallback Payloads:** Formatted all terminal nodes (`No Cart Yet`, `No Email`, and empty states) to return uniform price breakdown and item schemas to prevent undefined errors in parent workflows.
+* **Retry Policy:** Configured a 3-try retry with a 2-second wait on the WooCommerce Store API cart call.
+
+## 7. 🔴 Remove from Cart API (`OsGh5tDXTX5QIw1g`)
+**Status:** ✅ Completed & Robust
+
+* **Connected All Broken / Dead Branches:** Fixed the critical bug where `If Cart Empty` false branch (when remaining items > 0) was unconnected and dropped output. Also connected `If Cart Found` and `If Token Found` false branches so all error and success messages reach the caller.
+* **Row-Specific Sheet Deletion:** Passed `row_number` through from `Check Cart Exists` to `Clear Cart Row` so Google Sheets row deletion actually targets and deletes the correct cart row when empty.
+* **Resilient Output Handler:** Updated `Format Output` to preserve user-facing removal payloads regardless of whether Google Sheets row clearing executed immediately before it.
+* **Retries & Error Handling:** Added 3-try retry logic on `Remove Item via Store API` and `continueOnFail` protection on session fetching.
+
+---
+
 ### What's Next?
-According to the priority list, we are now ready to jump into:
-**5. 🟡 Check Boat Availability (`6TmemRadcJokPItN`)**
+According to the priority list, we are now ready for:
+**8. 🟢 Update Cart Item Passengers (`R4DoiRxM7WE6CWS6`)**
+

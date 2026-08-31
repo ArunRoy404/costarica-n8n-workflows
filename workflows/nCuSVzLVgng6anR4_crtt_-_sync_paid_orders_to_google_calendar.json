@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-27T03:38:55.882Z",
+  "updatedAt": "2026-08-31T05:30:04.509Z",
   "createdAt": "2026-08-06T06:15:06.576Z",
   "id": "nCuSVzLVgng6anR4",
   "name": "CRTT - Sync Paid Orders to Google Calendar",
@@ -314,26 +314,6 @@
   "versionCounter": 50,
   "triggerCount": 1,
   "sourceWorkflowId": null,
-  "shared": [
-    {
-      "updatedAt": "2026-08-06T06:15:06.579Z",
-      "createdAt": "2026-08-06T06:15:06.579Z",
-      "role": "workflow:owner",
-      "workflowId": "nCuSVzLVgng6anR4",
-      "projectId": "YKlYEXVQgHIwARXX",
-      "project": {
-        "updatedAt": "2026-06-03T11:53:20.889Z",
-        "createdAt": "2026-06-03T11:18:36.474Z",
-        "id": "YKlYEXVQgHIwARXX",
-        "name": "Rashid  Mustafa <info@costaricatransfersandtours.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null,
-        "customTelemetryTags": [],
-        "creatorId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    }
-  ],
   "tags": [],
   "activeVersion": {
     "updatedAt": "2026-08-27T03:38:58.000Z",
@@ -628,16 +608,6 @@
     "authors": "Rashid  Mustafa",
     "name": "Version 8567f386",
     "description": "",
-    "autosaved": true,
-    "workflowPublishHistory": [
-      {
-        "createdAt": "2026-08-27T03:38:58.226Z",
-        "id": 284,
-        "workflowId": "nCuSVzLVgng6anR4",
-        "versionId": "8567f386-e757-4b01-bda7-93deb2f9bfa0",
-        "event": "activated",
-        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    ]
+    "autosaved": true
   }
 }

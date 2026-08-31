@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-27T08:50:12.693Z",
+  "updatedAt": "2026-08-31T05:30:06.018Z",
   "createdAt": "2026-06-22T04:52:28.845Z",
   "id": "ZeNz4VZTUkNMPhOP",
   "name": "CRTT - Neo",
@@ -1339,26 +1339,6 @@
   "versionCounter": 982,
   "triggerCount": 1,
   "sourceWorkflowId": null,
-  "shared": [
-    {
-      "updatedAt": "2026-06-22T04:52:28.847Z",
-      "createdAt": "2026-06-22T04:52:28.847Z",
-      "role": "workflow:owner",
-      "workflowId": "ZeNz4VZTUkNMPhOP",
-      "projectId": "YKlYEXVQgHIwARXX",
-      "project": {
-        "updatedAt": "2026-06-03T11:53:20.889Z",
-        "createdAt": "2026-06-03T11:18:36.474Z",
-        "id": "YKlYEXVQgHIwARXX",
-        "name": "Rashid  Mustafa <info@costaricatransfersandtours.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null,
-        "customTelemetryTags": [],
-        "creatorId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    }
-  ],
   "tags": [],
   "activeVersion": {
     "updatedAt": "2026-08-27T08:50:12.694Z",
@@ -2687,24 +2667,6 @@
     "authors": "Rashid  Mustafa",
     "name": null,
     "description": null,
-    "autosaved": false,
-    "workflowPublishHistory": [
-      {
-        "createdAt": "2026-08-27T08:50:12.747Z",
-        "id": 316,
-        "workflowId": "ZeNz4VZTUkNMPhOP",
-        "versionId": "23e5229b-c606-4c7a-92f9-78f00ebea437",
-        "event": "activated",
-        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      },
-      {
-        "createdAt": "2026-08-27T08:50:12.732Z",
-        "id": 315,
-        "workflowId": "ZeNz4VZTUkNMPhOP",
-        "versionId": "23e5229b-c606-4c7a-92f9-78f00ebea437",
-        "event": "deactivated",
-        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    ]
+    "autosaved": false
   }
 }

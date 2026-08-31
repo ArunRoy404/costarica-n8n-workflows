@@ -6,7 +6,8 @@
   "main": "index.js",
   "scripts": {
     "pull": "node scripts/pull.js",
-    "push": "node scripts/push.js"
+    "push": "node scripts/push.js",
+    "validate": "node scripts/validate_workflows.mjs"
   },
   "keywords": [],
   "author": "",

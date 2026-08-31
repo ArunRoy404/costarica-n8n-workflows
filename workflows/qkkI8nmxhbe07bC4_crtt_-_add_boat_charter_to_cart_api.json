@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-27T04:13:43.591Z",
+  "updatedAt": "2026-08-31T05:30:05.224Z",
   "createdAt": "2026-07-18T09:48:19.405Z",
   "id": "qkkI8nmxhbe07bC4",
   "name": "CRTT - Add Boat Charter to Cart API",
@@ -640,26 +640,6 @@
   "versionCounter": 52,
   "triggerCount": 0,
   "sourceWorkflowId": null,
-  "shared": [
-    {
-      "updatedAt": "2026-07-18T09:48:19.408Z",
-      "createdAt": "2026-07-18T09:48:19.408Z",
-      "role": "workflow:owner",
-      "workflowId": "qkkI8nmxhbe07bC4",
-      "projectId": "YKlYEXVQgHIwARXX",
-      "project": {
-        "updatedAt": "2026-06-03T11:53:20.889Z",
-        "createdAt": "2026-06-03T11:18:36.474Z",
-        "id": "YKlYEXVQgHIwARXX",
-        "name": "Rashid  Mustafa <info@costaricatransfersandtours.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null,
-        "customTelemetryTags": [],
-        "creatorId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    }
-  ],
   "tags": [],
   "activeVersion": {
     "updatedAt": "2026-08-27T04:13:46.000Z",
@@ -1288,16 +1268,6 @@
     "authors": "Rashid  Mustafa",
     "name": "Version 32f2217b",
     "description": "",
-    "autosaved": true,
-    "workflowPublishHistory": [
-      {
-        "createdAt": "2026-08-27T04:13:46.885Z",
-        "id": 306,
-        "workflowId": "qkkI8nmxhbe07bC4",
-        "versionId": "32f2217b-88ea-4945-9ab6-c5fd08d29a2a",
-        "event": "activated",
-        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    ]
+    "autosaved": true
   }
 }

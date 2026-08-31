@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-27T03:53:25.911Z",
+  "updatedAt": "2026-08-31T05:30:04.183Z",
   "createdAt": "2026-07-30T10:29:39.460Z",
   "id": "n0ynlw5Mf1D6I9A6",
   "name": "CRTT - Order History API",
@@ -133,26 +133,6 @@
   "versionCounter": 9,
   "triggerCount": 0,
   "sourceWorkflowId": null,
-  "shared": [
-    {
-      "updatedAt": "2026-07-30T10:29:39.463Z",
-      "createdAt": "2026-07-30T10:29:39.463Z",
-      "role": "workflow:owner",
-      "workflowId": "n0ynlw5Mf1D6I9A6",
-      "projectId": "YKlYEXVQgHIwARXX",
-      "project": {
-        "updatedAt": "2026-06-03T11:53:20.889Z",
-        "createdAt": "2026-06-03T11:18:36.474Z",
-        "id": "YKlYEXVQgHIwARXX",
-        "name": "Rashid  Mustafa <info@costaricatransfersandtours.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null,
-        "customTelemetryTags": [],
-        "creatorId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    }
-  ],
   "tags": [],
   "activeVersion": {
     "updatedAt": "2026-08-27T03:53:29.000Z",
@@ -277,16 +257,6 @@
     "authors": "Rashid  Mustafa",
     "name": "Version 152238b6",
     "description": "",
-    "autosaved": true,
-    "workflowPublishHistory": [
-      {
-        "createdAt": "2026-08-27T03:53:29.283Z",
-        "id": 300,
-        "workflowId": "n0ynlw5Mf1D6I9A6",
-        "versionId": "152238b6-8233-43cb-972f-44a224ab853c",
-        "event": "activated",
-        "userId": "137d89e0-cd0f-4dbf-9af0-ee5113d4f763"
-      }
-    ]
+    "autosaved": true
   }
 }
