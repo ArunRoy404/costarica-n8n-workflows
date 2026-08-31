@@ -61,7 +61,7 @@ function neo_chatbot_enqueue_scripts() {
         $test_url = get_option('neo_chatbot_test_url', 'https://ai.costaricatransfersandtours.com/webhook-test/neo');
         $default_mode = get_option('neo_chatbot_default_mode', 'live');
         $bot_name = get_option('neo_chatbot_bot_name', 'Neo AI');
-        $greeting = get_option('neo_chatbot_greeting', 'Hola! I’m Neo, your dedicated Costa Rica tours & transportation specialist. How can I help you plan your perfect trip today?');
+        $greeting = get_option('neo_chatbot_greeting', 'Hola! I’m Neo, your dedicated Costa Rica tours & experiences specialist. How can I help you plan your perfect trip today?');
 
         $config = array(
             'productionUrl' => esc_url_raw($prod_url),
@@ -127,7 +127,7 @@ function neo_chatbot_register_settings() {
     register_setting('neo_chatbot_settings_group', 'neo_chatbot_greeting', array(
         'type'              => 'string',
         'sanitize_callback' => 'sanitize_text_field',
-        'default'           => 'Hola! I’m Neo, your dedicated Costa Rica tours & transportation specialist. How can I help you plan your perfect trip today?',
+        'default'           => 'Hola! I’m Neo, your dedicated Costa Rica tours & experiences specialist. How can I help you plan your perfect trip today?',
     ));
 }
 add_action('admin_init', 'neo_chatbot_register_settings');
