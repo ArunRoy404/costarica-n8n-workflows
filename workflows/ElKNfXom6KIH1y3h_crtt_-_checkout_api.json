@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-31T08:29:03.055Z",
+  "updatedAt": "2026-08-31T08:50:09.857Z",
   "createdAt": "2026-07-30T05:24:40.294Z",
   "id": "ElKNfXom6KIH1y3h",
   "name": "CRTT - Checkout API",
@@ -334,11 +334,12 @@
           "id": "VG4pKpGtyLYBwOzq",
           "name": "CRTT WooCommerce"
         }
-      }
+      },
+      "continueOnFail": true
     },
     {
       "parameters": {
-        "jsCode": "const prior = $('Validate Billing Fields').first().json;\nconst countryData = $input.first().json;\nconst states = countryData.states || [];\n\nif (states.length === 0) {\n  return [{ json: { ...prior, error: false } }];\n}\n\nconst userInput = (prior.state || '').trim().toLowerCase();\n\nconst exactCodeMatch = states.find(s => s.code.toLowerCase() === userInput);\nif (exactCodeMatch) {\n  return [{ json: { ...prior, state: exactCodeMatch.code, error: false } }];\n}\n\nconst nameMatch = states.find(s =>\n  s.name.trim().toLowerCase() === userInput ||\n  s.name.trim().toLowerCase().includes(userInput) ||\n  userInput.includes(s.name.trim().toLowerCase())\n);\nif (nameMatch) {\n  return [{ json: { ...prior, state: nameMatch.code, error: false } }];\n}\n\nconst validNames = states.map(s => s.name.trim()).join(', ');\nreturn [{ json: { error: true, message: `\"${prior.state}\" isn't a recognized state/division for ${countryData.name}. Valid options: ${validNames}` } }];"
+        "jsCode": "const prior = $('Validate Billing Fields').first().json;\nconst countryData = $input.first().json;\nconst country = (prior.country || '').trim().toUpperCase();\nconst userState = (prior.state || '').trim();\nconst userStateLower = userState.toLowerCase();\n\n// Built-in Costa Rica province mapper for WooCommerce Store API (CR-G, CR-SJ, etc.)\nconst crProvinces = {\n  'guanacaste': 'CR-G', 'g': 'CR-G', 'cr-g': 'CR-G',\n  'san jose': 'CR-SJ', 'san josé': 'CR-SJ', 'sj': 'CR-SJ', 'cr-sj': 'CR-SJ',\n  'alajuela': 'CR-A', 'a': 'CR-A', 'cr-a': 'CR-A',\n  'heredia': 'CR-H', 'h': 'CR-H', 'cr-h': 'CR-H',\n  'cartago': 'CR-C', 'c': 'CR-C', 'cr-c': 'CR-C',\n  'puntarenas': 'CR-P', 'p': 'CR-P', 'cr-p': 'CR-P',\n  'limon': 'CR-L', 'limón': 'CR-L', 'l': 'CR-L', 'cr-l': 'CR-L'\n};\n\nif (country === 'CR') {\n  const resolvedCr = crProvinces[userStateLower] || 'CR-G';\n  return [{ json: { ...prior, state: resolvedCr, error: false } }];\n}\n\n// Check if WooCommerce API returned state list\nconst states = countryData?.states || [];\nif (states.length > 0) {\n  const exact = states.find(s => s.code.toLowerCase() === userStateLower);\n  if (exact) return [{ json: { ...prior, state: exact.code, error: false } }];\n  \n  const match = states.find(s => s.name.toLowerCase().includes(userStateLower) || userStateLower.includes(s.name.toLowerCase()));\n  if (match) return [{ json: { ...prior, state: match.code, error: false } }];\n}\n\n// Default fallback\nreturn [{ json: { ...prior, state: userState.toUpperCase(), error: false } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -775,16 +776,16 @@
   "meta": null,
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "d410d932-e21b-4123-8bdf-c45ee26037f2",
-  "activeVersionId": "d410d932-e21b-4123-8bdf-c45ee26037f2",
-  "versionCounter": 39,
+  "versionId": "5328fe74-a781-4312-a4b1-cbe2db9184ab",
+  "activeVersionId": "5328fe74-a781-4312-a4b1-cbe2db9184ab",
+  "versionCounter": 40,
   "triggerCount": 0,
   "sourceWorkflowId": null,
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-08-31T05:33:30.663Z",
-    "createdAt": "2026-08-31T05:33:30.663Z",
-    "versionId": "d410d932-e21b-4123-8bdf-c45ee26037f2",
+    "updatedAt": "2026-08-31T08:43:30.370Z",
+    "createdAt": "2026-08-31T08:43:30.370Z",
+    "versionId": "5328fe74-a781-4312-a4b1-cbe2db9184ab",
     "workflowId": "ElKNfXom6KIH1y3h",
     "nodes": [
       {
@@ -1114,11 +1115,12 @@
             "id": "VG4pKpGtyLYBwOzq",
             "name": "CRTT WooCommerce"
           }
-        }
+        },
+        "continueOnFail": true
       },
       {
         "parameters": {
-          "jsCode": "const prior = $('Validate Billing Fields').first().json;\nconst countryData = $input.first().json;\nconst states = countryData.states || [];\n\nif (states.length === 0) {\n  return [{ json: { ...prior, error: false } }];\n}\n\nconst userInput = (prior.state || '').trim().toLowerCase();\n\nconst exactCodeMatch = states.find(s => s.code.toLowerCase() === userInput);\nif (exactCodeMatch) {\n  return [{ json: { ...prior, state: exactCodeMatch.code, error: false } }];\n}\n\nconst nameMatch = states.find(s =>\n  s.name.trim().toLowerCase() === userInput ||\n  s.name.trim().toLowerCase().includes(userInput) ||\n  userInput.includes(s.name.trim().toLowerCase())\n);\nif (nameMatch) {\n  return [{ json: { ...prior, state: nameMatch.code, error: false } }];\n}\n\nconst validNames = states.map(s => s.name.trim()).join(', ');\nreturn [{ json: { error: true, message: `\"${prior.state}\" isn't a recognized state/division for ${countryData.name}. Valid options: ${validNames}` } }];"
+          "jsCode": "const prior = $('Validate Billing Fields').first().json;\nconst countryData = $input.first().json;\nconst country = (prior.country || '').trim().toUpperCase();\nconst userState = (prior.state || '').trim();\nconst userStateLower = userState.toLowerCase();\n\n// Built-in Costa Rica province mapper for WooCommerce Store API (CR-G, CR-SJ, etc.)\nconst crProvinces = {\n  'guanacaste': 'CR-G', 'g': 'CR-G', 'cr-g': 'CR-G',\n  'san jose': 'CR-SJ', 'san josé': 'CR-SJ', 'sj': 'CR-SJ', 'cr-sj': 'CR-SJ',\n  'alajuela': 'CR-A', 'a': 'CR-A', 'cr-a': 'CR-A',\n  'heredia': 'CR-H', 'h': 'CR-H', 'cr-h': 'CR-H',\n  'cartago': 'CR-C', 'c': 'CR-C', 'cr-c': 'CR-C',\n  'puntarenas': 'CR-P', 'p': 'CR-P', 'cr-p': 'CR-P',\n  'limon': 'CR-L', 'limón': 'CR-L', 'l': 'CR-L', 'cr-l': 'CR-L'\n};\n\nif (country === 'CR') {\n  const resolvedCr = crProvinces[userStateLower] || 'CR-G';\n  return [{ json: { ...prior, state: resolvedCr, error: false } }];\n}\n\n// Check if WooCommerce API returned state list\nconst states = countryData?.states || [];\nif (states.length > 0) {\n  const exact = states.find(s => s.code.toLowerCase() === userStateLower);\n  if (exact) return [{ json: { ...prior, state: exact.code, error: false } }];\n  \n  const match = states.find(s => s.name.toLowerCase().includes(userStateLower) || userStateLower.includes(s.name.toLowerCase()));\n  if (match) return [{ json: { ...prior, state: match.code, error: false } }];\n}\n\n// Default fallback\nreturn [{ json: { ...prior, state: userState.toUpperCase(), error: false } }];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,

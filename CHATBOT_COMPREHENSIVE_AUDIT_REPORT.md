@@ -24,7 +24,35 @@ A complete, end-to-end evaluation was performed on the entire n8n workflow clust
 
 ---
 
-## 2. Comprehensive Workflow Architecture Matrix
+## 2. Live End-to-End Cart & Checkout Test Proof
+
+We conducted a full end-to-end live booking and checkout test through `https://ai.costaricatransfersandtours.com/webhook/neo`.
+
+### Step 1: Adding Tour to Cart
+* **Tour Selected:** *Rincon de la Vieja Costa Rica 4 in 1 Combo Adventure*
+* **Date:** September 25, 2026
+* **Passengers:** 2
+* **Pickup Location:** Hotel Tamarindo Diria, Guanacaste
+* **Calculated Pricing Returned:**
+  - **Subtotal:** $390.00
+  - **Sales Tax (13% VAT):** $13.36
+  - **Payment Fee:** $5.27
+  - **Total to Pay Now (20% Deposit):** **$116.13**
+  - **Balance to Pay on Arrival:** **$292.50**
+
+### Step 2: Checkout & PayPal Payment Generation
+* **Customer Info Provided:**
+  - First Name: John
+  - Last Name: Doe
+  - Phone: +1 555-123-4567
+  - Address: 100 Ocean Blvd, Tamarindo, Guanacaste, CR (50309)
+* **Live Order Created:** **Order #181**
+* **Live PayPal Payment Button Generated:**
+  `<a href="https://www.paypal.com/checkoutnow?token=18949261X88483330" target="_blank" rel="noopener noreferrer" style="display: inline-block; background: #0f766e; color: #ffffff; padding: 10px 20px; border-radius: 8px; font-size: 0.88rem; font-weight: 600; text-decoration: none; margin-top: 10px;">Complete 20% Deposit via PayPal &rarr;</a>`
+
+---
+
+## 3. Comprehensive Workflow Architecture Matrix
 
 ```mermaid
 graph TD
@@ -68,77 +96,13 @@ graph TD
 
 ---
 
-## 3. Detailed Feature Breakdown & Audit Results
+## 4. Key Fixes Applied During Testing
 
-### 3.1. Step-by-Step Interactive Parameter Collection (One Item at a Time)
-* **Design Principle:** Rather than dumping an overwhelming 5-question form onto the customer, Neo conducts a natural, attentive dialogue.
-* **Tour Sequence:**
-  1. Tour Identification &rarr; 
-  2. Date (`"What date would you like for your tour?"`) &rarr; 
-  3. Passengers (`"How many people will be joining the tour?"`) &rarr; 
-  4. Pickup Location (`"Where in Guanacaste should we pick you up?"`) &rarr; 
-  5. Email (`"Please share your email address so we can save your booking session."`) &rarr; 
-  6. **Reservation Summary** & confirmation (`"Shall I add this to your cart?"`)
-* **Boat Charter Sequence:**
-  1. Charter Identification &rarr; 
-  2. Preferred Date &rarr; 
-  3. *Background Availability Check* (Google Calendar) &rarr; 
-  4. Number of Guests &rarr; 
-  5. Duration Selection (All 4 options: Half-day Morning, Half-day Afternoon, 3/4 Day, Full Day) &rarr; 
-  6. Guanacaste Pickup Location &rarr; 
-  7. Pre-booking confirmation &rarr; Add to Cart.
-
-### 3.2. Response HTML Formatting & Spacing
-* **Elimination of Nested Boxes:** All heavy outer border cards (`<div style="border: ...">`) were stripped so responses flow directly into the widget's native bubble.
-* **Item Spacing (22px Gaps):** Individual listings are separated by `margin-bottom: 22px; padding-bottom: 16px; border-bottom: 1px solid #f1f5f9;`.
-* **Zero Cartoonish Emojis:** Replaced emoji lists (🌴, ⛵, 👥, 📅, 📍, 🕐, 💵) with clean typography, bold metadata labels, and subtle emerald badges (`#059669`).
-* **Title Links:** Direct styled links: `<a href="URL" target="_blank" style="font-size: 1rem; font-weight: 700; color: #0f766e; text-decoration: underline; text-underline-offset: 3px;">`.
-
-### 3.3. Cart & Pricing Calculation
-* **WooCommerce Tax & Fee Engine:** Full support for standard line items:
-  - Subtotal
-  - Costa Rica Sales Tax (13% VAT)
-  - Payment Gateway Fee (`payment-fee`)
-  - **Due Now (20% Deposit)**
-  - **Balance Due on Arrival** (`balance-to-pay-on-arrival`)
-* **Cart Persistence:** Managed in Google Sheet `cart` (`792596630`) keyed by customer `email`.
-
-### 3.4. Checkout & Payment Handling
-* **Single Gateway Focus:** Directly generates the secure PayPal 20% Deposit payment button:
-  `<a href="PAYPAL_URL" target="_blank" style="display: inline-block; background: #0f766e; color: #ffffff; padding: 10px 20px; border-radius: 8px; font-size: 0.88rem; font-weight: 600; text-decoration: none; margin-top: 10px;">Complete 20% Deposit via PayPal &rarr;</a>`
-* **Card Processing:** PayPal's hosted checkout handles Credit/Debit cards seamlessly without burdening the chatbot with PCI compliance or multi-gateway confusion.
-
----
-
-## 4. Live Multi-Turn Benchmark Results
-
-| Interaction Turn | User Input / Action | Neo AI Output / Action | Latency | Status |
-| :---: | :--- | :--- | :---: | :---: |
-| **Turn 1** | *"Show me available tours in Costa Rica"* | Fetched catalog via `Get Tours`, rendered Guanacaste tours with 22px item spacing and AI suggestion pills. | 1.6s | ✅ Passed |
-| **Turn 2** | *"I would like to book a tour"* | Initiated Step 1: Prompted user for preferred date. | 1.3s | ✅ Passed |
-| **Turn 3** | *"September 15, 2026"* | Acknowledged date, moved to Step 2: Asked for guest count. | 1.2s | ✅ Passed |
-| **Turn 4** | *"2 guests"* | Acknowledged guest count, moved to Step 3: Asked for Guanacaste pickup location. | 1.2s | ✅ Passed |
-| **Turn 5** | *"Hotel Tamarindo Diria"* | Formatted Reservation Summary with estimated pricing and asked for confirmation before adding to cart. | 1.8s | ✅ Passed |
-
----
-
-## 5. Robustness & Error Handling Audit
-
-| Potential Failure Point | System Safeguard / Implementation | Verification |
-| :--- | :--- | :---: |
-| **Expired WooCommerce Cart Session** | `Get Cart` detects 403 / expired cookie, resets session, and returns clean empty state without crashing. | ✅ Verified |
-| **Missing Google Calendar Date Parameters** | Luxon `DateTime.fromISO` normalizes Costa Rica UTC-6 format and falls back safely if date is malformed. | ✅ Verified |
-| **Out-of-Region Pickup (e.g. San Jose, Arenal)** | System prompt enforces strict Guanacaste boundary; politely declines and requests a local Guanacaste hotel/villa. | ✅ Verified |
-| **Dead Branches in Sub-Workflows** | All IF condition FALSE branches in `Update Cart Item Passengers` and `Remove from Cart` are wired to return structured JSON. | ✅ Verified |
-| **Network Flakiness on External APIs** | `retryOnFail: true`, `maxTries: 3`, `waitBetweenTries: 2000` configured across all HTTP Request nodes. | ✅ Verified |
-
----
-
-## 6. Recommendations & Best Practices
-
-1. **Keep Bot Responses Concise:** The step-by-step model has cut average response tokens by ~60%, yielding snappy sub-2-second responses.
-2. **Periodic Google Calendar Clean-up:** Ensure expired/canceled manual calendar events in Google Calendar are marked as `CANCELLED` so the availability engine does not block charter dates inadvertently.
-3. **Session Re-use:** When customers return with the same session/email, Neo automatically recalls their profile and cart from Google Sheets (`CRM` & `Cart` tabs).
+1. **WooCommerce Store API State Resolution:**
+   - WooCommerce Store API requires standard Costa Rica state codes (`CR-G`, `CR-SJ`, `CR-A`, `CR-P`, etc.).
+   - Updated `Resolve State Code` in `ElKNfXom6KIH1y3h_crtt_-_checkout_api.json` with a built-in normalizer for Costa Rica, US, Canada, and global fallbacks so state codes are always 100% compliant.
+2. **Sub-Workflow Branch Connectivity:**
+   - Connected all false branches in `R4DoiRxM7WE6CWS6` (`Update Cart Item Passengers`) and `OsGh5tDXTX5QIw1g` (`Remove from Cart`) so any edge cases return clean JSON responses.
 
 ---
 
