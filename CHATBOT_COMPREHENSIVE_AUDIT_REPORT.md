@@ -18,7 +18,7 @@ A complete, end-to-end evaluation was performed on the entire n8n workflow clust
 | **Main AI Agent (`NEO`)** | **Optimal** | Deterministic 1-by-1 parameter gathering, luxury minimalist HTML formatting, CRM extraction, AI suggestion pills. |
 | **Cart APIs (Add / Get / Update / Remove)** | **Optimal** | Session cookie persistence, fee parsing (13% VAT, PayPal fee, balance due on arrival), Google Sheets atomic synchronization. |
 | **Boat Charter Availability Engine** | **Optimal** | Luxon Costa Rica timezone normalization, single-booking daily exclusivity, canceled calendar event filtering. |
-| **Checkout & Payment Engine** | **Optimal** | Direct PayPal 20% deposit URL generation, customer billing address parsing, automatic post-checkout cart cleanup. |
+| **Checkout & Payment Engine** | **Optimal** | Direct PayPal 25% deposit URL generation, customer billing address parsing, automatic post-checkout cart cleanup. |
 | **Google Calendar Background Sync** | **Optimal** | Automatic paid order detection, event creation with customer & tour details. |
 | **Frontend Widget & WordPress Plugin** | **Optimal** | Proactive pulse tooltip, 22px item gapping, zero cartoonish emojis, native responsive bubble design. |
 
@@ -37,7 +37,7 @@ We conducted a full end-to-end live booking and checkout test through `https://a
   - **Subtotal:** $390.00
   - **Sales Tax (13% VAT):** $13.36
   - **Payment Fee:** $5.27
-  - **Total to Pay Now (20% Deposit):** **$116.13**
+  - **Total to Pay Now (25% Deposit):** **$116.13**
   - **Balance to Pay on Arrival:** **$292.50**
 
 ### Step 2: Checkout & PayPal Payment Generation
@@ -48,7 +48,7 @@ We conducted a full end-to-end live booking and checkout test through `https://a
   - Address: 100 Ocean Blvd, Tamarindo, Guanacaste, CR (50309)
 * **Live Order Created:** **Order #181**
 * **Live PayPal Payment Button Generated:**
-  `<a href="https://www.paypal.com/checkoutnow?token=18949261X88483330" target="_blank" rel="noopener noreferrer" style="display: inline-block; background: #0f766e; color: #ffffff; padding: 10px 20px; border-radius: 8px; font-size: 0.88rem; font-weight: 600; text-decoration: none; margin-top: 10px;">Complete 20% Deposit via PayPal &rarr;</a>`
+  `<a href="https://www.paypal.com/checkoutnow?token=18949261X88483330" target="_blank" rel="noopener noreferrer" style="display: inline-block; background: #0f766e; color: #ffffff; padding: 10px 20px; border-radius: 8px; font-size: 0.88rem; font-weight: 600; text-decoration: none; margin-top: 10px;">Complete 25% Deposit via PayPal &rarr;</a>`
 
 ---
 
@@ -83,7 +83,7 @@ graph TD
     subgraph Checkout & Order Flow
         Neo --> Checkout[Checkout API]
         Checkout --> WC_Order[(WooCommerce Orders)]
-        Checkout --> PayPal([PayPal 20% Deposit Link])
+        Checkout --> PayPal([PayPal 25% Deposit Link])
         WC_Order --> SyncGCal[Sync Paid Orders to Google Calendar]
     end
     
