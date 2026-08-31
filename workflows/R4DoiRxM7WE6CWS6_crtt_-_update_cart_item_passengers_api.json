@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-31T08:24:43.317Z",
+  "updatedAt": "2026-08-31T08:29:04.650Z",
   "createdAt": "2026-07-29T10:22:30.259Z",
   "id": "R4DoiRxM7WE6CWS6",
   "name": "CRTT - Update Cart Item Passengers API",
@@ -259,7 +259,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const resp = $input.first().json;\nconst prior = $('Extract Cart Token').first().json;\nconst body = resp.body || resp;\nconst statusOk = resp.statusCode >= 200 && resp.statusCode < 300;\nconst apiSuccess = body?.success === true;\nconst returnedPassengers = body?.data?.passengers;\nconst countMatches = Number(returnedPassengers) === Number(prior.passenger_count);\n\nif (!statusOk || !apiSuccess || !countMatches) {\n  return [{ json: { error: true, message: 'Failed to update the passenger count for this item.' } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    message: 'Passenger count updated successfully.',\n    email: prior.email,\n    item_key: prior.item_key,\n    new_passenger_count: returnedPassengers\n  }\n}];"
+        "jsCode": "const item = $input.first().json;\nif (item.error) {\n  return [{ json: item }];\n}\n\nconst resp = item;\nconst prior = $('Extract Cart Token').first().json;\nconst body = resp.body || resp;\nconst statusOk = resp.statusCode >= 200 && resp.statusCode < 300;\nconst apiSuccess = body?.success === true;\nconst returnedPassengers = body?.data?.passengers;\nconst countMatches = Number(returnedPassengers) === Number(prior.passenger_count);\n\nif (!statusOk || !apiSuccess || !countMatches) {\n  return [{ json: { error: true, message: 'Failed to update the passenger count for this item.' } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    message: 'Passenger count updated successfully.',\n    email: prior.email,\n    item_key: prior.item_key,\n    new_passenger_count: returnedPassengers\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -314,7 +314,13 @@
             "index": 0
           }
         ],
-        []
+        [
+          {
+            "node": "Check Update Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Get Fresh Cart": {
@@ -348,7 +354,13 @@
             "index": 0
           }
         ],
-        []
+        [
+          {
+            "node": "Check Update Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Update Item via Store API": {
@@ -376,16 +388,16 @@
   "meta": null,
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "667b554d-6d2d-4527-807a-1f4cc194e0d7",
-  "activeVersionId": "667b554d-6d2d-4527-807a-1f4cc194e0d7",
-  "versionCounter": 16,
+  "versionId": "843cf2d6-5f04-47d5-a5e5-54c84a1c159d",
+  "activeVersionId": "843cf2d6-5f04-47d5-a5e5-54c84a1c159d",
+  "versionCounter": 17,
   "triggerCount": 0,
   "sourceWorkflowId": null,
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-08-31T05:33:32.441Z",
-    "createdAt": "2026-08-31T05:33:32.441Z",
-    "versionId": "667b554d-6d2d-4527-807a-1f4cc194e0d7",
+    "updatedAt": "2026-08-31T08:28:46.990Z",
+    "createdAt": "2026-08-31T08:28:46.990Z",
+    "versionId": "843cf2d6-5f04-47d5-a5e5-54c84a1c159d",
     "workflowId": "R4DoiRxM7WE6CWS6",
     "nodes": [
       {
@@ -640,7 +652,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const resp = $input.first().json;\nconst prior = $('Extract Cart Token').first().json;\nconst body = resp.body || resp;\nconst statusOk = resp.statusCode >= 200 && resp.statusCode < 300;\nconst apiSuccess = body?.success === true;\nconst returnedPassengers = body?.data?.passengers;\nconst countMatches = Number(returnedPassengers) === Number(prior.passenger_count);\n\nif (!statusOk || !apiSuccess || !countMatches) {\n  return [{ json: { error: true, message: 'Failed to update the passenger count for this item.' } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    message: 'Passenger count updated successfully.',\n    email: prior.email,\n    item_key: prior.item_key,\n    new_passenger_count: returnedPassengers\n  }\n}];"
+          "jsCode": "const item = $input.first().json;\nif (item.error) {\n  return [{ json: item }];\n}\n\nconst resp = item;\nconst prior = $('Extract Cart Token').first().json;\nconst body = resp.body || resp;\nconst statusOk = resp.statusCode >= 200 && resp.statusCode < 300;\nconst apiSuccess = body?.success === true;\nconst returnedPassengers = body?.data?.passengers;\nconst countMatches = Number(returnedPassengers) === Number(prior.passenger_count);\n\nif (!statusOk || !apiSuccess || !countMatches) {\n  return [{ json: { error: true, message: 'Failed to update the passenger count for this item.' } }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    message: 'Passenger count updated successfully.',\n    email: prior.email,\n    item_key: prior.item_key,\n    new_passenger_count: returnedPassengers\n  }\n}];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -695,7 +707,13 @@
               "index": 0
             }
           ],
-          []
+          [
+            {
+              "node": "Check Update Result",
+              "type": "main",
+              "index": 0
+            }
+          ]
         ]
       },
       "Get Fresh Cart": {
@@ -729,7 +747,13 @@
               "index": 0
             }
           ],
-          []
+          [
+            {
+              "node": "Check Update Result",
+              "type": "main",
+              "index": 0
+            }
+          ]
         ]
       },
       "Update Item via Store API": {
