@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-31T05:30:06.018Z",
+  "updatedAt": "2026-08-31T05:33:32.771Z",
   "createdAt": "2026-06-22T04:52:28.845Z",
   "id": "ZeNz4VZTUkNMPhOP",
   "name": "CRTT - Neo",
@@ -153,7 +153,7 @@
     {
       "parameters": {
         "toolDescription": "Use this tool to get a list of tours and land-based excursions only. Each result includes: id, title, service_type, region, duration, pickup_time, pricing_summary (tiered per person), availability, and categories.",
-        "url": "https://dev.costaricatransfersandtours.com/wp-json/crtt/v1/services/tour",
+        "url": "https://costaricatransfersandtours.com/wp-json/crtt/v1/services/tour",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequestTool",
@@ -168,7 +168,7 @@
     {
       "parameters": {
         "toolDescription": "Use this tool to get a list of boat charters only. Each result includes: id, title, boat_tier_count, pricing_summary (per group with boat options and price_from), availability, and region.",
-        "url": "https://dev.costaricatransfersandtours.com/wp-json/crtt/v1/services/boat_charter",
+        "url": "https://costaricatransfersandtours.com/wp-json/crtt/v1/services/boat_charter",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequestTool",
@@ -183,7 +183,7 @@
     {
       "parameters": {
         "toolDescription": "Use this tool to get a list of private transportation services. Informational only — not cartable yet.",
-        "url": "https://dev.costaricatransfersandtours.com/wp-json/crtt/v1/services/transportation",
+        "url": "https://costaricatransfersandtours.com/wp-json/crtt/v1/services/transportation",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequestTool",
@@ -198,7 +198,7 @@
     {
       "parameters": {
         "toolDescription": "Use this tool to get the FULL details of a specific tour by its numeric ID — including description, highlights, inclusions/exclusions, what to bring, pickup time, pickup note, duration, cancellation policy, and complete tiered pricing per person. You MUST call this before giving a detailed pitch, quoting exact prices, or adding the tour to cart.",
-        "url": "=https://dev.costaricatransfersandtours.com/wp-json/crtt/v1/services/tour/{{ $fromAI('tour_id', 'The numeric ID of the tour', 'number') }}",
+        "url": "=https://costaricatransfersandtours.com/wp-json/crtt/v1/services/tour/{{ $fromAI('tour_id', 'The numeric ID of the tour', 'number') }}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequestTool",
@@ -213,7 +213,7 @@
     {
       "parameters": {
         "toolDescription": "Use this tool to get the FULL details of a specific boat charter by its numeric ID — including description, highlights, inclusions/exclusions, all boat tiers (boat name, min/max passengers, durations with prices and pickup times), and cancellation policy. You MUST call this before quoting prices or adding to cart.",
-        "url": "=https://dev.costaricatransfersandtours.com/wp-json/crtt/v1/services/boat_charter/{{ $fromAI('boat_charter_id', 'The numeric ID of the boat charter', 'number') }}",
+        "url": "=https://costaricatransfersandtours.com/wp-json/crtt/v1/services/boat_charter/{{ $fromAI('boat_charter_id', 'The numeric ID of the boat charter', 'number') }}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequestTool",
@@ -1334,16 +1334,16 @@
   },
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "23e5229b-c606-4c7a-92f9-78f00ebea437",
-  "activeVersionId": "23e5229b-c606-4c7a-92f9-78f00ebea437",
-  "versionCounter": 982,
+  "versionId": "f7cf7904-66e3-4464-af86-28094d2d3d12",
+  "activeVersionId": "f7cf7904-66e3-4464-af86-28094d2d3d12",
+  "versionCounter": 983,
   "triggerCount": 1,
   "sourceWorkflowId": null,
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-08-27T08:50:12.694Z",
-    "createdAt": "2026-08-27T08:50:12.694Z",
-    "versionId": "23e5229b-c606-4c7a-92f9-78f00ebea437",
+    "updatedAt": "2026-08-31T05:33:32.772Z",
+    "createdAt": "2026-08-31T05:33:32.772Z",
+    "versionId": "f7cf7904-66e3-4464-af86-28094d2d3d12",
     "workflowId": "ZeNz4VZTUkNMPhOP",
     "nodes": [
       {
@@ -1492,7 +1492,7 @@
       {
         "parameters": {
           "toolDescription": "Use this tool to get a list of tours and land-based excursions only. Each result includes: id, title, service_type, region, duration, pickup_time, pricing_summary (tiered per person), availability, and categories.",
-          "url": "https://dev.costaricatransfersandtours.com/wp-json/crtt/v1/services/tour",
+          "url": "https://costaricatransfersandtours.com/wp-json/crtt/v1/services/tour",
           "options": {}
         },
         "type": "n8n-nodes-base.httpRequestTool",
@@ -1507,7 +1507,7 @@
       {
         "parameters": {
           "toolDescription": "Use this tool to get a list of boat charters only. Each result includes: id, title, boat_tier_count, pricing_summary (per group with boat options and price_from), availability, and region.",
-          "url": "https://dev.costaricatransfersandtours.com/wp-json/crtt/v1/services/boat_charter",
+          "url": "https://costaricatransfersandtours.com/wp-json/crtt/v1/services/boat_charter",
           "options": {}
         },
         "type": "n8n-nodes-base.httpRequestTool",
@@ -1522,7 +1522,7 @@
       {
         "parameters": {
           "toolDescription": "Use this tool to get a list of private transportation services. Informational only — not cartable yet.",
-          "url": "https://dev.costaricatransfersandtours.com/wp-json/crtt/v1/services/transportation",
+          "url": "https://costaricatransfersandtours.com/wp-json/crtt/v1/services/transportation",
           "options": {}
         },
         "type": "n8n-nodes-base.httpRequestTool",
@@ -1537,7 +1537,7 @@
       {
         "parameters": {
           "toolDescription": "Use this tool to get the FULL details of a specific tour by its numeric ID — including description, highlights, inclusions/exclusions, what to bring, pickup time, pickup note, duration, cancellation policy, and complete tiered pricing per person. You MUST call this before giving a detailed pitch, quoting exact prices, or adding the tour to cart.",
-          "url": "=https://dev.costaricatransfersandtours.com/wp-json/crtt/v1/services/tour/{{ $fromAI('tour_id', 'The numeric ID of the tour', 'number') }}",
+          "url": "=https://costaricatransfersandtours.com/wp-json/crtt/v1/services/tour/{{ $fromAI('tour_id', 'The numeric ID of the tour', 'number') }}",
           "options": {}
         },
         "type": "n8n-nodes-base.httpRequestTool",
@@ -1552,7 +1552,7 @@
       {
         "parameters": {
           "toolDescription": "Use this tool to get the FULL details of a specific boat charter by its numeric ID — including description, highlights, inclusions/exclusions, all boat tiers (boat name, min/max passengers, durations with prices and pickup times), and cancellation policy. You MUST call this before quoting prices or adding to cart.",
-          "url": "=https://dev.costaricatransfersandtours.com/wp-json/crtt/v1/services/boat_charter/{{ $fromAI('boat_charter_id', 'The numeric ID of the boat charter', 'number') }}",
+          "url": "=https://costaricatransfersandtours.com/wp-json/crtt/v1/services/boat_charter/{{ $fromAI('boat_charter_id', 'The numeric ID of the boat charter', 'number') }}",
           "options": {}
         },
         "type": "n8n-nodes-base.httpRequestTool",

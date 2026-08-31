@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-31T05:30:04.509Z",
+  "updatedAt": "2026-08-31T05:33:31.329Z",
   "createdAt": "2026-08-06T06:15:06.576Z",
   "id": "nCuSVzLVgng6anR4",
   "name": "CRTT - Sync Paid Orders to Google Calendar",
@@ -28,7 +28,7 @@
     },
     {
       "parameters": {
-        "url": "https://dev.costaricatransfersandtours.com/wp-json/wc/v3/orders",
+        "url": "https://costaricatransfersandtours.com/wp-json/wc/v3/orders",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "wooCommerceApi",
         "sendQuery": true,
@@ -309,16 +309,16 @@
   },
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "8567f386-e757-4b01-bda7-93deb2f9bfa0",
-  "activeVersionId": "8567f386-e757-4b01-bda7-93deb2f9bfa0",
-  "versionCounter": 50,
+  "versionId": "5e27dc97-f6f2-48f7-971d-13505746d082",
+  "activeVersionId": "5e27dc97-f6f2-48f7-971d-13505746d082",
+  "versionCounter": 51,
   "triggerCount": 1,
   "sourceWorkflowId": null,
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-08-27T03:38:58.000Z",
-    "createdAt": "2026-08-27T03:38:55.883Z",
-    "versionId": "8567f386-e757-4b01-bda7-93deb2f9bfa0",
+    "updatedAt": "2026-08-31T05:33:31.329Z",
+    "createdAt": "2026-08-31T05:33:31.329Z",
+    "versionId": "5e27dc97-f6f2-48f7-971d-13505746d082",
     "workflowId": "nCuSVzLVgng6anR4",
     "nodes": [
       {
@@ -342,7 +342,7 @@
       },
       {
         "parameters": {
-          "url": "https://dev.costaricatransfersandtours.com/wp-json/wc/v3/orders",
+          "url": "https://costaricatransfersandtours.com/wp-json/wc/v3/orders",
           "authentication": "predefinedCredentialType",
           "nodeCredentialType": "wooCommerceApi",
           "sendQuery": true,
@@ -606,8 +606,8 @@
     },
     "nodeGroups": [],
     "authors": "Rashid  Mustafa",
-    "name": "Version 8567f386",
-    "description": "",
-    "autosaved": true
+    "name": null,
+    "description": null,
+    "autosaved": false
   }
 }

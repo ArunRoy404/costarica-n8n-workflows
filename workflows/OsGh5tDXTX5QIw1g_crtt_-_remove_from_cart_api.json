@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-31T05:30:04.849Z",
+  "updatedAt": "2026-08-31T05:33:31.658Z",
   "createdAt": "2026-07-24T10:05:18.902Z",
   "id": "OsGh5tDXTX5QIw1g",
   "name": "CRTT - Remove from Cart API",
@@ -120,7 +120,7 @@
     },
     {
       "parameters": {
-        "url": "https://dev.costaricatransfersandtours.com/wp-json/wc/store/v1/cart",
+        "url": "https://costaricatransfersandtours.com/wp-json/wc/store/v1/cart",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -201,7 +201,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://dev.costaricatransfersandtours.com/wp-json/wc/store/v1/cart/remove-item",
+        "url": "https://costaricatransfersandtours.com/wp-json/wc/store/v1/cart/remove-item",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -503,16 +503,16 @@
   },
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "bd4596a1-748f-456f-be27-41eb7281ddde",
-  "activeVersionId": "bd4596a1-748f-456f-be27-41eb7281ddde",
-  "versionCounter": 17,
+  "versionId": "867cbbf5-0ad8-4504-8e5f-2d4565c5a972",
+  "activeVersionId": "867cbbf5-0ad8-4504-8e5f-2d4565c5a972",
+  "versionCounter": 18,
   "triggerCount": 0,
   "sourceWorkflowId": null,
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-08-31T05:30:04.850Z",
-    "createdAt": "2026-08-31T05:30:04.850Z",
-    "versionId": "bd4596a1-748f-456f-be27-41eb7281ddde",
+    "updatedAt": "2026-08-31T05:33:31.659Z",
+    "createdAt": "2026-08-31T05:33:31.659Z",
+    "versionId": "867cbbf5-0ad8-4504-8e5f-2d4565c5a972",
     "workflowId": "OsGh5tDXTX5QIw1g",
     "nodes": [
       {
@@ -628,7 +628,7 @@
       },
       {
         "parameters": {
-          "url": "https://dev.costaricatransfersandtours.com/wp-json/wc/store/v1/cart",
+          "url": "https://costaricatransfersandtours.com/wp-json/wc/store/v1/cart",
           "sendHeaders": true,
           "headerParameters": {
             "parameters": [
@@ -709,7 +709,7 @@
       {
         "parameters": {
           "method": "POST",
-          "url": "https://dev.costaricatransfersandtours.com/wp-json/wc/store/v1/cart/remove-item",
+          "url": "https://costaricatransfersandtours.com/wp-json/wc/store/v1/cart/remove-item",
           "sendHeaders": true,
           "headerParameters": {
             "parameters": [

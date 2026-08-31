@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-31T05:30:02.802Z",
+  "updatedAt": "2026-08-31T05:33:29.630Z",
   "createdAt": "2026-07-04T11:38:55.539Z",
   "id": "3Y156z1PqTLcmopZ",
   "name": "CRTT - Add Tour to Cart API",
@@ -40,7 +40,7 @@
     },
     {
       "parameters": {
-        "url": "=https://dev.costaricatransfersandtours.com/wp-json/crtt/v1/services/tour/{{ $json.tour_id }}",
+        "url": "=https://costaricatransfersandtours.com/wp-json/crtt/v1/services/tour/{{ $json.tour_id }}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -171,7 +171,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://dev.costaricatransfersandtours.com/wp-admin/admin-ajax.php",
+        "url": "https://costaricatransfersandtours.com/wp-admin/admin-ajax.php",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -529,16 +529,16 @@
   "meta": null,
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "87129c7e-fa48-49ae-bd1f-d28400885515",
-  "activeVersionId": "87129c7e-fa48-49ae-bd1f-d28400885515",
-  "versionCounter": 188,
+  "versionId": "460f17cd-77ae-443a-8b26-e8aea4b68b93",
+  "activeVersionId": "460f17cd-77ae-443a-8b26-e8aea4b68b93",
+  "versionCounter": 189,
   "triggerCount": 0,
   "sourceWorkflowId": null,
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-08-27T03:40:30.000Z",
-    "createdAt": "2026-08-27T03:40:26.609Z",
-    "versionId": "87129c7e-fa48-49ae-bd1f-d28400885515",
+    "updatedAt": "2026-08-31T05:33:29.633Z",
+    "createdAt": "2026-08-31T05:33:29.633Z",
+    "versionId": "460f17cd-77ae-443a-8b26-e8aea4b68b93",
     "workflowId": "3Y156z1PqTLcmopZ",
     "nodes": [
       {
@@ -574,7 +574,7 @@
       },
       {
         "parameters": {
-          "url": "=https://dev.costaricatransfersandtours.com/wp-json/crtt/v1/services/tour/{{ $json.tour_id }}",
+          "url": "=https://costaricatransfersandtours.com/wp-json/crtt/v1/services/tour/{{ $json.tour_id }}",
           "options": {}
         },
         "type": "n8n-nodes-base.httpRequest",
@@ -705,7 +705,7 @@
       {
         "parameters": {
           "method": "POST",
-          "url": "https://dev.costaricatransfersandtours.com/wp-admin/admin-ajax.php",
+          "url": "https://costaricatransfersandtours.com/wp-admin/admin-ajax.php",
           "sendHeaders": true,
           "headerParameters": {
             "parameters": [
@@ -1057,8 +1057,8 @@
     },
     "nodeGroups": [],
     "authors": "Rashid  Mustafa",
-    "name": "Version 87129c7e",
-    "description": "",
-    "autosaved": true
+    "name": null,
+    "description": null,
+    "autosaved": false
   }
 }

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-31T05:30:03.510Z",
+  "updatedAt": "2026-08-31T05:33:30.306Z",
   "createdAt": "2026-07-04T11:03:47.939Z",
   "id": "b78Su2zPQsu2tHBK",
   "name": "CRTT - Get Cart API",
@@ -70,7 +70,7 @@
     },
     {
       "parameters": {
-        "url": "https://dev.costaricatransfersandtours.com/wp-json/wc/store/v1/cart",
+        "url": "https://costaricatransfersandtours.com/wp-json/wc/store/v1/cart",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -282,16 +282,16 @@
   "meta": null,
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "9d3ab8b4-cfe2-4c43-b2a0-6103d1d234c8",
-  "activeVersionId": "9d3ab8b4-cfe2-4c43-b2a0-6103d1d234c8",
-  "versionCounter": 78,
+  "versionId": "53b2b3cd-c84c-4c62-aac0-eba603463837",
+  "activeVersionId": "53b2b3cd-c84c-4c62-aac0-eba603463837",
+  "versionCounter": 79,
   "triggerCount": 0,
   "sourceWorkflowId": null,
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-08-31T05:30:03.511Z",
-    "createdAt": "2026-08-31T05:30:03.511Z",
-    "versionId": "9d3ab8b4-cfe2-4c43-b2a0-6103d1d234c8",
+    "updatedAt": "2026-08-31T05:33:30.307Z",
+    "createdAt": "2026-08-31T05:33:30.307Z",
+    "versionId": "53b2b3cd-c84c-4c62-aac0-eba603463837",
     "workflowId": "b78Su2zPQsu2tHBK",
     "nodes": [
       {
@@ -357,7 +357,7 @@
       },
       {
         "parameters": {
-          "url": "https://dev.costaricatransfersandtours.com/wp-json/wc/store/v1/cart",
+          "url": "https://costaricatransfersandtours.com/wp-json/wc/store/v1/cart",
           "sendHeaders": true,
           "headerParameters": {
             "parameters": [
